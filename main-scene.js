@@ -20,13 +20,13 @@ const {
 const Minimal_Webgl_Demo = defs.Minimal_Webgl_Demo;
 
 Object.assign(defs,
-            {Transforms_Sandbox}, {Assignment2});
+            {Transforms_Sandbox}, {Tgttos});
 
 // ******************** End extra step
 
 // (Can define Main_Scene's class here)
 
-//const Main_Scene = Assignment2;
+//const Main_Scene = Tgttos;
 const Main_Scene = Tgttos;
 const Additional_Scenes = [];
 

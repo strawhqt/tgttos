@@ -27,6 +27,10 @@ export class Tgttos extends Scene {
   constructor() {
     super();
     this.default_cube_transform = Mat4.identity();
+    this.moving_left = false;
+    this.moving_right = false;
+    this.moving_forward = false;
+    this.moving_back = false;
     this.shapes = {
       cube: new Cube(),
     }
@@ -42,14 +46,18 @@ export class Tgttos extends Scene {
 
   make_control_panel() {
     // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-    this.key_triggered_button("Change Colors", ["c"], this.set_colors);
-    // Add a button for controlling the scene.
-    this.key_triggered_button("Outline", ["o"], () => {
-    });
-    this.key_triggered_button("Sit still", ["m"], () => {
-    });
+    this.key_triggered_button("Forward", ["w"], () => this.moving_forward = true, '#6E6460', () => this.moving_forward = false);
+    this.key_triggered_button("Left", ["a"], () => this.moving_left = true, '#6E6460', () => this.moving_left = false);
+    this.key_triggered_button("Back", ["s"], () => this.moving_back = true, '#6E6460', () => this.moving_back = false);
+    this.key_triggered_button("Right", ["d"], () => this.moving_right = true, '#6E6460', () => this.moving_right = false);
+
   }
 
+  handle_movement(model_transform, left, right, forward, back, speed) {
+    const x = (right - left) * speed;
+    const z = (back - forward) * speed;
+    return Mat4.translation(x, 0, z).times(model_transform);
+  }
   display(context, program_state) {
     // display():  Called once per frame of animation. Here, the base class's display only does
     // some initial setup.
@@ -59,12 +67,13 @@ export class Tgttos extends Scene {
     if (!context.scratchpad.controls) {
       this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
       // Define the global camera and projection matrices, which are stored in program_state.
-      program_state.set_camera(Mat4.translation(0, -4, -20).times(Mat4.rotation(Math.PI / 6, 1, 0, 0)));
+      // program_state.set_camera(Mat4.translation(0, -4, -20).times(Mat4.rotation(Math.PI / 6, 1, 0, 0)));
     }
 
     // attaches movement controls to cube
-    context.scratchpad.controls.set_recipient(() => this.default_cube_transform,
-      () => Mat4.inverse(this.default_cube_transform));
+    // context.scratchpad.controls.set_recipient(() => this.default_cube_transform,
+    //   () => Mat4.inverse(this.default_cube_transform));
+    this.default_cube_transform = this.handle_movement(this.default_cube_transform, this.moving_left, this.moving_right, this.moving_forward, this.moving_back, 0.1);
     // attaches camera to cube
     program_state.set_camera(Mat4.translation(0, -4, -20)
       .times(Mat4.rotation(Math.PI / 4, 1, 0, 0))
@@ -77,7 +86,6 @@ export class Tgttos extends Scene {
     // *** Lights: *** Values of vector or point lights.
     const light_position = vec4(0, 5, 2, 1);
     program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
-
     this.shapes.cube.draw(context, program_state, this.default_cube_transform, this.materials.cube.override({color: hex_color("#1a9ffa")}));
 
 
