@@ -49,6 +49,9 @@ export class Tgttos extends Scene {
     program_state.set_camera(Mat4.translation(0, -4, -20)
       .times(Mat4.rotation(Math.PI / 4, 1, 0, 0))
       .times(Mat4.inverse(this.default_chicken_transform)));
+    const x = this.default_chicken_transform[0][3];
+    const z = this.default_chicken_transform[2][3];
+
 
     program_state.projection_transform = Mat4.perspective(
       Math.PI / 4, context.width / context.height, 1, 100);
