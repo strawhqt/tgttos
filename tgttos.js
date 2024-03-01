@@ -5,6 +5,13 @@ const {
   Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene,
 } = tiny;
 
+class Lane {
+  constructor(model_transform, color) {
+    this.lane_transform = model_transform;
+    this.color = color;
+  }
+}
+
 export class Tgttos extends Scene {
 
   constructor() {
@@ -21,18 +28,15 @@ export class Tgttos extends Scene {
     this.chunks_rendered = 1;
     this.models = new Models();
     this.default_chicken_transform = Mat4.identity();
-    this.ground_transform = Mat4.identity().times(Mat4.scale(this.x_bound, 1, this.lane_width))
+    this.lane_transform = Mat4.identity().times(Mat4.scale(this.x_bound, 1, this.lane_width))
       .times(Mat4.translation(0, -2, 0));
     this.lane_colors = [hex_color('#b2e644'), hex_color('#699e1c')]
     this.lanes = []
     for(let i = 0; i < 10; i++) {
-      this.lanes.push({
-        key: this.ground_transform,
-        color: this.lane_colors[i % 2],
-      });
-      this.ground_transform = this.ground_transform.times(Mat4.translation(0, 0, -2));
+      this.lanes.push(new Lane(this.lane_transform, this.lane_colors[i % 2]));
+      this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     }
-    console.log(this.lanes);
+
   }
 
   make_control_panel() {
@@ -91,18 +95,14 @@ export class Tgttos extends Scene {
     this.models.drawChicken(context, program_state, this.default_chicken_transform);
 
     for (let i = 0; i < this.lanes.length; i++) {
-      this.models.drawGround(context, program_state, this.lanes[i].key, this.lanes[i].color);
+      this.models.drawGround(context, program_state, this.lanes[i].lane_transform, this.lanes[i].color);
     }
-
     if (z > this.chunks_rendered * 10) {
       this.chunks_rendered++;
       console.log(z);
       for (let i = 0; i < 10; i++) {
-        this.lanes.push({
-          key: this.ground_transform,
-          color: this.lane_colors[i % 2],
-        });
-        this.ground_transform = this.ground_transform.times(Mat4.translation(0, 0, -2));
+        this.lanes.push(new Lane(this.lane_transform, this.lane_colors[i % 2]));
+        this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
         // delete the old stuff
       }
     }
