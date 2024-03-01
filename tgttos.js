@@ -16,6 +16,7 @@ export class Tgttos extends Scene {
     this.speed = 0.5;
     this.x_bound = 20; // how far left and right player can move
     this.z_bound = -100;
+    this.camera_z_bound = -100;
     this.lane_width = 5; // how wide each lane is (in terms of z)
     this.chunks_rendered = 1;
     this.models = new Models();
@@ -67,16 +68,17 @@ export class Tgttos extends Scene {
     // position of the chicken
     const old_x = this.default_chicken_transform[0][3]; // +x on the right
     const old_z = -this.default_chicken_transform[2][3]; // +z into the page
-    this.z_bound = Math.max(this.z_bound, old_z - this.lane_width * 2);
 
     // attaches movement controls to cube
     this.default_chicken_transform = this.handle_movement(this.default_chicken_transform, this.moving_left, this.moving_right, this.moving_forward, this.moving_back, this.speed, old_x, old_z);
-    // attaches camera to cube
     const x = this.default_chicken_transform[0][3]; // +x on the right
     const z = -this.default_chicken_transform[2][3]; // +z into the page
+    this.z_bound = Math.max(this.z_bound, z - this.lane_width);
+    this.camera_z_bound = Math.max(this.camera_z_bound, z);
+    // attaches camera to cube
     program_state.set_camera(Mat4.translation(0, -4, -30)
-      .times(Mat4.rotation(Math.PI / 6, 1, 0, 0))
-      .times(Mat4.translation(0, 0, z)));
+      .times(Mat4.rotation(Math.PI / 5, 1, 0, 0))
+      .times(Mat4.translation(0, 0, this.camera_z_bound)));
 
     program_state.projection_transform = Mat4.perspective(
       Math.PI / 4, context.width / context.height, 1, 100);
