@@ -96,7 +96,7 @@ export class Tgttos extends Scene {
     program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 10)];
 
     // main character
-    this.models.drawChicken(context, program_state, this.default_chicken_transform);
+    this.models.drawChicken(context, program_state, this.default_chicken_transform.times(Mat4.rotation(this.chicken_angle, 0, 1, 0)));
 
     for (let i = 0; i < this.lanes.length; i++) {
       this.models.drawGround(context, program_state, this.lanes[i].lane_transform, this.lanes[i].color);
