@@ -37,7 +37,7 @@ export class Tgttos extends Scene {
     this.moving_right = false;
     this.moving_forward = false;
     this.moving_back = false;
-    this.speed = 0.5;
+    this.speed = 1;
     this.x_bound = 20; // how far left and right player can move
     this.z_bound = -100;
     this.camera_z_bound = -100;
@@ -57,6 +57,8 @@ export class Tgttos extends Scene {
     this.moving = false;
     this.start_move_time = 0;
     this.tweak_angle = 0;
+    this.first_clear_lanes = false;
+    console.log(this.lanes);
   }
 
   make_control_panel() {
@@ -116,9 +118,11 @@ export class Tgttos extends Scene {
     this.z_bound = Math.max(this.z_bound, z - this.lane_width);
     this.camera_z_bound = Math.max(this.camera_z_bound, z);
     // attaches camera to cube
-    program_state.set_camera(Mat4.translation(0, -4, -30)
+    program_state.set_camera(Mat4.identity()
+      .times(Mat4.translation(0, -4, -30))
       .times(Mat4.rotation(Math.PI / 5, 1, 0, 0))
-      .times(Mat4.translation(0, 0, this.camera_z_bound)));
+      .times(Mat4.translation(0, 0, this.camera_z_bound))
+      );
 
     program_state.projection_transform = Mat4.perspective(
       Math.PI / 4, context.width / context.height, 1, 100);
@@ -133,17 +137,22 @@ export class Tgttos extends Scene {
     for (let i = 0; i < this.lanes.length; i++) {
       this.models.drawCube(context, program_state, this.lanes[i].obstacle_transform)
       this.lanes[i].setObstacleTransform(this.lanes[i].obstacle_transform
-        .times(Mat4.translation(t/this.lanes[i].obstacle_speed * this.lanes[i].obstacle_direction, 0, 0)));
+        .times(Mat4.translation(50/this.lanes[i].obstacle_speed * this.lanes[i].obstacle_direction, 0, 0)));
       this.models.drawGround(context, program_state, this.lanes[i].lane_transform, this.lanes[i].color);
     }
 
-    if (z > this.chunks_rendered * 10) {
+    if (z > (this.chunks_rendered - 1) * 10 * 2 * this.lane_width + 2 * this.lane_width) {
       this.chunks_rendered++;
+      console.log(z);
       for (let i = 0; i < 10; i++) {
         this.lanes.push(new Lane(this.lane_transform, this.lane_colors[i % 2], this.x_bound));
         this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
-        // delete the old stuff
+        if (this.first_clear_lanes) {
+          this.lanes.shift();
+        }
       }
+      this.first_clear_lanes = true;
+      console.log(this.lanes);
     }
   }
 }
