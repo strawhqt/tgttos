@@ -13,17 +13,48 @@ export class Models {
       plastic: new Material(new defs.Phong_Shader(),
         {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
       cube: new Material(new defs.Phong_Shader(),
-        {ambient: 0.2, diffusivity: 1, specularity: 1, color: hex_color("#ffffff")}),
+        {ambient: 0.8, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
       ground: new Material(new defs.Phong_Shader(),
         {ambient: 1, diffusivity: 0, specularity: 0, color: hex_color("#B5ED5D")}),
     };
   }
 
+  backAndForth(model_transform, x, y, z) {
+    return Mat4.translation(-x, -y, -z).times(model_transform).times(Mat4.translation(x, y, z));
+  }
   drawChicken(context, program_state, model_transform) {
-    this.shapes.cube.draw(context, program_state, model_transform, this.materials.cube);
+    const body_transform = this.backAndForth(Mat4.scale(0.4, 0.4, 0.5), 0, 1, 0);
+    const head_transform = Mat4.translation(0, 0, 0)
+      .times(body_transform)
+      .times(Mat4.translation(0, 1, -1))
+      .times(Mat4.scale(1, 0.7, 0.7))
+      .times(Mat4.translation(0, 1, 1));
+    const wing_transform = body_transform
+      .times(Mat4.translation(0, -0.2, -0.1))
+      .times(Mat4.scale(1.3, 0.6, 0.7));
+    const eye_transform = head_transform
+      .times(Mat4.translation(0, 0.1, -0.2))
+      .times(Mat4.scale(1.01, 0.2, 0.2));
+    const hat_transform = body_transform
+      .times(Mat4.translation(0, 3.4, 0.2))
+      .times(this.backAndForth(Mat4.scale(0.3, 0.2, 0.4), 0, 1, 1))
+    const beak_transform = body_transform
+      .times(Mat4.translation(0, 1.7, -2))
+      .times(this.backAndForth(Mat4.scale(1, 1, 0.2), 0, 0, -1))
+      .times(Mat4.scale(0.3, 0.4, 1));
+    const wattle_transform = body_transform
+      .times(Mat4.translation(0, 0.8, -2))
+      .times(this.backAndForth(Mat4.scale(0.2, 0.8, 0.13), 0, -1, -1))
+    this.shapes.cube.draw(context, program_state, model_transform.times(body_transform), this.materials.cube);
+    this.shapes.cube.draw(context, program_state, model_transform.times(head_transform), this.materials.cube);
+    this.shapes.cube.draw(context, program_state, model_transform.times(wing_transform), this.materials.cube);
+    this.shapes.cube.draw(context, program_state, model_transform.times(eye_transform), this.materials.cube.override({color: vec4(0, 0, 0, 1)}));
+    this.shapes.cube.draw(context, program_state, model_transform.times(hat_transform), this.materials.cube.override({color: vec4(1, 0, 0, 1)}));
+    this.shapes.cube.draw(context, program_state, model_transform.times(beak_transform), this.materials.cube.override({color: hex_color('#FFA500')}));
+    this.shapes.cube.draw(context, program_state, model_transform.times(wattle_transform), this.materials.cube.override({color: vec4(1, 0, 0, 1)}));
   }
 
-  drawGround(context, program_state, model_transform) {
-    this.shapes.cube.draw(context, program_state, model_transform, this.materials.ground);
+  drawGround(context, program_state, model_transform, color) {
+    this.shapes.cube.draw(context, program_state, model_transform, this.materials.ground.override({color: color}));
   }
 }

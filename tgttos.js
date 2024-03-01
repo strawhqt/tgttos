@@ -15,6 +15,7 @@ export class Tgttos extends Scene {
     this.moving_back = false;
     this.speed = 0.5;
     this.x_bound = 20; // how far left and right player can move
+    this.z_bound = -100;
     this.lane_width = 5; // how wide each lane is (in terms of z)
     this.chunks_rendered = 1;
     this.models = new Models();
@@ -42,10 +43,11 @@ export class Tgttos extends Scene {
 
   }
 
-  handle_movement(model_transform, left, right, forward, back, speed, x_pos) {
+  handle_movement(model_transform, left, right, forward, back, speed, x_pos, z_pos) {
     const x_trans = (x_pos >= this.x_bound && right - left > 0) || (x_pos <= -this.x_bound && right - left < 0)
       ? 0 : (right - left) * speed;
-    const z_trans = (back - forward) * speed;
+    const z_trans = (z_pos <= this.z_bound && forward - back < 0)
+        ? 0 : (back - forward) * speed;
     return Mat4.translation(x_trans, 0, z_trans).times(model_transform);
   }
   display(context, program_state) {
@@ -63,23 +65,25 @@ export class Tgttos extends Scene {
     const t = program_state.animation_time / 1000;
 
     // position of the chicken
-    const x = this.default_chicken_transform[0][3]; // +x on the right
-    const z = -this.default_chicken_transform[2][3]; // +z into the page
+    const old_x = this.default_chicken_transform[0][3]; // +x on the right
+    const old_z = -this.default_chicken_transform[2][3]; // +z into the page
+    this.z_bound = Math.max(this.z_bound, old_z - this.lane_width * 2);
 
     // attaches movement controls to cube
-    this.default_chicken_transform = this.handle_movement(this.default_chicken_transform, this.moving_left, this.moving_right, this.moving_forward, this.moving_back, this.speed, x);
+    this.default_chicken_transform = this.handle_movement(this.default_chicken_transform, this.moving_left, this.moving_right, this.moving_forward, this.moving_back, this.speed, old_x, old_z);
     // attaches camera to cube
-
-    program_state.set_camera(Mat4.translation(0, -4, -20)
-      //.times(Mat4.rotation(Math.PI / 4, 1, 0, 0))
-      .times(Mat4.inverse(this.default_chicken_transform)));
+    const x = this.default_chicken_transform[0][3]; // +x on the right
+    const z = -this.default_chicken_transform[2][3]; // +z into the page
+    program_state.set_camera(Mat4.translation(0, -4, -30)
+      .times(Mat4.rotation(Math.PI / 6, 1, 0, 0))
+      .times(Mat4.translation(0, 0, z)));
 
     program_state.projection_transform = Mat4.perspective(
       Math.PI / 4, context.width / context.height, 1, 100);
 
     // *** Lights: *** Values of vector or point lights.
-    const light_position = vec4(0, 5, 2, 1);
-    program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
+    const light_position = vec4(x, 5, -z, 1);
+    program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 10)];
 
     // main character
     this.models.drawChicken(context, program_state, this.default_chicken_transform);
