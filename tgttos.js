@@ -6,10 +6,27 @@ const {
 } = tiny;
 
 class Lane {
-  constructor(model_transform, color) {
+  constructor(model_transform, color, lane_x_width) {
     this.lane_transform = model_transform;
     this.color = color;
+    this.x_bound = lane_x_width;
+    this.obstacle_start_offset = Math.random() * 2 * this.x_bound - this.x_bound;
+    this.obstacle_transform = Mat4.identity().times(Mat4.translation(this.obstacle_start_offset, 0, model_transform[2][3]));
+    this.obstacle_speed = Math.random() * (500 - 100) + 100;
+    this.obstacle_direction = Math.round(Math.random()) ? 1 : -1
   }
+
+  setObstacleTransform(model_transform) {
+    const x_pos = model_transform[0][3];
+    this.obstacle_transform = model_transform;
+    if (x_pos <= -this.x_bound || x_pos >= this.x_bound) {
+      this.obstacle_direction = -this.obstacle_direction
+    }
+  }
+}
+
+class Moving_Obstacle {
+  // will code later, right now obstacle is in Lane
 }
 
 export class Tgttos extends Scene {
@@ -34,7 +51,7 @@ export class Tgttos extends Scene {
     this.lane_colors = [hex_color('#b2e644'), hex_color('#699e1c')]
     this.lanes = []
     for(let i = 0; i < 10; i++) {
-      this.lanes.push(new Lane(this.lane_transform, this.lane_colors[i % 2]));
+      this.lanes.push(new Lane(this.lane_transform, this.lane_colors[i % 2], this.x_bound));
       this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     }
     this.moving = false;
@@ -85,7 +102,7 @@ export class Tgttos extends Scene {
     this.camera_z_bound = Math.max(this.camera_z_bound, z);
     // attaches camera to cube
     program_state.set_camera(Mat4.translation(0, -4, -30)
-      .times(Mat4.rotation(Math.PI / 4, 1, 0, 0))
+      .times(Mat4.rotation(Math.PI / 5, 1, 0, 0))
       .times(Mat4.translation(0, 0, this.camera_z_bound)));
 
     program_state.projection_transform = Mat4.perspective(
@@ -99,13 +116,16 @@ export class Tgttos extends Scene {
     this.models.drawChicken(context, program_state, this.default_chicken_transform.times(Mat4.rotation(this.chicken_angle, 0, 1, 0)));
 
     for (let i = 0; i < this.lanes.length; i++) {
+      this.models.drawCube(context, program_state, this.lanes[i].obstacle_transform)
+      this.lanes[i].setObstacleTransform(this.lanes[i].obstacle_transform
+        .times(Mat4.translation(t/this.lanes[i].obstacle_speed * this.lanes[i].obstacle_direction, 0, 0)));
       this.models.drawGround(context, program_state, this.lanes[i].lane_transform, this.lanes[i].color);
     }
 
     if (z > this.chunks_rendered * 10) {
       this.chunks_rendered++;
       for (let i = 0; i < 10; i++) {
-        this.lanes.push(new Lane(this.lane_transform, this.lane_colors[i % 2]));
+        this.lanes.push(new Lane(this.lane_transform, this.lane_colors[i % 2], this.x_bound));
         this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
         // delete the old stuff
       }
