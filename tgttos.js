@@ -55,6 +55,8 @@ export class Tgttos extends Scene {
       this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     }
     this.moving = false;
+    this.start_move_time = 0;
+    this.tweak_angle = 0;
   }
 
   make_control_panel() {
@@ -66,14 +68,27 @@ export class Tgttos extends Scene {
 
   }
 
-  handle_movement(model_transform, left, right, forward, back, speed, x_pos, z_pos) {
+  handle_movement(model_transform, left, right, forward, back, speed, x_pos, z_pos, t) {
     const x_trans = (x_pos >= this.x_bound && right - left > 0) || (x_pos <= -this.x_bound && right - left < 0)
       ? 0 : (right - left) * speed;
     const z_trans = (z_pos <= this.z_bound && forward - back < 0)
         ? 0 : (back - forward) * speed;
+    if (left - right > 0) this.chicken_angle = Math.PI / 2;
+    else if (right - left > 0) this.chicken_angle = -Math.PI / 2
     if (forward - back > 0) this.chicken_angle = 0;
     else if (back - forward > 0) this.chicken_angle = Math.PI;
     this.moving = left || right || forward || back;
+    if (this.moving) {
+      if (!this.start_move_time)
+        this.start_move_time = t;
+      if (this.tweak_angle)
+        this.tweak_angle = 0.2 * Math.sin(40 * (t - this.start_move_time));
+      else
+        this.tweak_angle = Math.PI / 8;
+    } else {
+      this.start_move_time = 0;
+      this.tweak_angle = 0;
+    }
     return Mat4.translation(x_trans, 0, z_trans).times(model_transform);
   }
   display(context, program_state) {
@@ -95,7 +110,7 @@ export class Tgttos extends Scene {
     const old_z = -this.default_chicken_transform[2][3]; // +z into the page
 
     // attaches movement controls to cube
-    this.default_chicken_transform = this.handle_movement(this.default_chicken_transform, this.moving_left, this.moving_right, this.moving_forward, this.moving_back, this.speed, old_x, old_z);
+    this.default_chicken_transform = this.handle_movement(this.default_chicken_transform, this.moving_left, this.moving_right, this.moving_forward, this.moving_back, this.speed, old_x, old_z, t);
     const x = this.default_chicken_transform[0][3]; // +x on the right
     const z = -this.default_chicken_transform[2][3]; // +z into the page
     this.z_bound = Math.max(this.z_bound, z - this.lane_width);
@@ -113,7 +128,7 @@ export class Tgttos extends Scene {
     program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 10)];
 
     // main character
-    this.models.drawChicken(context, program_state, this.default_chicken_transform.times(Mat4.rotation(this.chicken_angle, 0, 1, 0)));
+    this.models.drawChicken(context, program_state, this.default_chicken_transform.times(Mat4.rotation(this.chicken_angle, 0, 1, 0).times(Mat4.rotation(this.tweak_angle, 0, 0, 1))), this.moving);
 
     for (let i = 0; i < this.lanes.length; i++) {
       this.models.drawCube(context, program_state, this.lanes[i].obstacle_transform)
