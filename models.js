@@ -8,14 +8,21 @@ export class Models {
     this.shapes = {
       cube: new defs.Cube(),
       triangle: new defs.Triangle(),
+      egg: new defs.Subdivision_Sphere(4),
     }
     this.materials = {
       plastic: new Material(new defs.Phong_Shader(),
         {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
       cube: new Material(new defs.Phong_Shader(),
         {ambient: 0.8, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
+      obstacle: new Material(new defs.Phong_Shader(),
+        {ambient: 0.9, diffusivity: 1, specularity: 0, color: hex_color("#FFC0CB")}),
       ground: new Material(new defs.Phong_Shader(),
         {ambient: 1, diffusivity: 0, specularity: 0, color: hex_color("#B5ED5D")}),
+      background: new Material(new defs.Phong_Shader(),
+        {ambient: 1, diffusivity: 0, specularity: 0, color: hex_color("#009dc4")}),
+      egg: new Material(new defs.Phong_Shader(),
+        {ambient: 0.8, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
     };
   }
 
@@ -67,8 +74,27 @@ export class Models {
     this.shapes.cube.draw(context, program_state, model_transform, this.materials.ground.override({color: color}));
   }
 
-  drawCube(context, program_state, model_transform) {
-    this.shapes.cube.draw(context, program_state, model_transform, this.materials.cube);
+  drawObstacle(context, program_state, model_transform) {
+    this.shapes.cube.draw(context, program_state, model_transform, this.materials.obstacle);
+  }
+
+  drawBackground(context, program_state, model_transform) {
+    model_transform = Mat4.translation(0, -4, 0)
+      .times(model_transform)
+      .times(Mat4.scale(120, 1, 120))
+    ;
+    this.shapes.cube.draw(context, program_state, model_transform, this.materials.background);
+  }
+
+  drawEgg(context, program_state, model_transform) {
+    // model_transform = model_transform
+    //   .times(Mat4.translation(0, 0, 1));
+    const egg_model = model_transform
+      .times(Mat4.scale(0.8, 1, 0.8))
+      .times(Mat4.translation(0, 0, 1));
+    // this.shapes.egg.draw(context, program_state, egg_base_model, this.materials.egg);
+    this.shapes.egg.draw(context, program_state, egg_model, this.materials.egg);
+
   }
 
 }

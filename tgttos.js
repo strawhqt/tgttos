@@ -37,7 +37,7 @@ export class Tgttos extends Scene {
     this.moving_right = false;
     this.moving_forward = false;
     this.moving_back = false;
-    this.speed = 1;
+    this.speed = 0.3;
     this.x_bound = 20; // how far left and right player can move
     this.z_bound = -100;
     this.camera_z_bound = -100;
@@ -50,7 +50,7 @@ export class Tgttos extends Scene {
       .times(Mat4.translation(0, -2, 0));
     this.lane_colors = [hex_color('#b2e644'), hex_color('#699e1c')]
     this.lanes = []
-    for(let i = 0; i < 10; i++) {
+    for(let i = 0; i < 16; i++) {
       this.lanes.push(new Lane(this.lane_transform, this.lane_colors[i % 2], this.x_bound));
       this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     }
@@ -58,7 +58,7 @@ export class Tgttos extends Scene {
     this.start_move_time = 0;
     this.tweak_angle = 0;
     this.first_clear_lanes = false;
-    console.log(this.lanes);
+    this.eggs = [];
   }
 
   make_control_panel() {
@@ -67,7 +67,7 @@ export class Tgttos extends Scene {
     this.key_triggered_button("Left", ["a"], () => this.moving_left = true, '#6E6460', () => this.moving_left = false);
     this.key_triggered_button("Back", ["s"], () => this.moving_back = true, '#6E6460', () => this.moving_back = false);
     this.key_triggered_button("Right", ["d"], () => this.moving_right = true, '#6E6460', () => this.moving_right = false);
-
+    this.key_triggered_button("Egg", [" "], () => { this.eggs.push(this.default_chicken_transform); this.eggs = this.eggs.slice(-10)}, '#6E6460');
   }
 
   handle_movement(model_transform, left, right, forward, back, speed, x_pos, z_pos, t) {
@@ -119,23 +119,27 @@ export class Tgttos extends Scene {
     this.camera_z_bound = Math.max(this.camera_z_bound, z);
     // attaches camera to cube
     program_state.set_camera(Mat4.identity()
-      .times(Mat4.translation(0, -4, -30))
-      .times(Mat4.rotation(Math.PI / 5, 1, 0, 0))
+      .times(Mat4.translation(0, -4, -35))
+      .times(Mat4.rotation(Math.PI / 6, 1, 0, 0))
       .times(Mat4.translation(0, 0, this.camera_z_bound))
       );
 
     program_state.projection_transform = Mat4.perspective(
-      Math.PI / 4, context.width / context.height, 1, 100);
+      Math.PI / 4.5, context.width / context.height, 1, 200);
 
     // *** Lights: *** Values of vector or point lights.
-    const light_position = vec4(x, 5, -z, 1);
-    program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 10)];
+    const light_position = vec4(0, 5, -z, 1);
+    program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 100)];
 
     // main character
     this.models.drawChicken(context, program_state, this.default_chicken_transform.times(Mat4.rotation(this.chicken_angle, 0, 1, 0).times(Mat4.rotation(this.tweak_angle, 0, 0, 1))), this.moving);
+    this.models.drawBackground(context, program_state, this.default_chicken_transform);
+    this.eggs.forEach((egg_model_transform) => {
+      this.models.drawEgg(context, program_state, egg_model_transform);
+    })
 
     for (let i = 0; i < this.lanes.length; i++) {
-      this.models.drawCube(context, program_state, this.lanes[i].obstacle_transform)
+      this.models.drawObstacle(context, program_state, this.lanes[i].obstacle_transform)
       this.lanes[i].setObstacleTransform(this.lanes[i].obstacle_transform
         .times(Mat4.translation(50/this.lanes[i].obstacle_speed * this.lanes[i].obstacle_direction, 0, 0)));
       this.models.drawGround(context, program_state, this.lanes[i].lane_transform, this.lanes[i].color);
