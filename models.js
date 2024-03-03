@@ -70,7 +70,7 @@ export class Models {
     this.shapes.cube.draw(context, program_state, model_transform.times(wattle_transform), this.materials.cube.override({color: vec4(1, 0, 0, 1)}));
   }
 
-  drawGround(context, program_state, model_transform, color) {
+  drawLane(context, program_state, model_transform, color) {
     this.shapes.cube.draw(context, program_state, model_transform, this.materials.ground.override({color: color}));
   }
 

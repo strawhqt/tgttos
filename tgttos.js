@@ -9,11 +9,22 @@ class Lane {
   constructor(model_transform, color, lane_x_width) {
     this.lane_transform = model_transform;
     this.color = color;
-    this.x_bound = lane_x_width;
+    this.obstacle_count = Math.floor(Math.random() * 3)
+    this.obstacle = []
+    for (let i = 0; i < this.obstacle_count; i++) {
+      this.obstacle.push(new Moving_Obstacle(model_transform, lane_x_width));
+    }
+  }
+}
+
+class Moving_Obstacle {
+  constructor(model_transform, x_bound) {
+    this.x_bound = x_bound
     this.obstacle_start_offset = Math.random() * 2 * this.x_bound - this.x_bound;
     this.obstacle_transform = Mat4.identity().times(Mat4.translation(this.obstacle_start_offset, 0, model_transform[2][3]));
     this.obstacle_speed = Math.random() * (500 - 100) + 100;
     this.obstacle_direction = Math.round(Math.random()) ? 1 : -1
+
   }
 
   setObstacleTransform(model_transform) {
@@ -23,10 +34,6 @@ class Lane {
       this.obstacle_direction = -this.obstacle_direction
     }
   }
-}
-
-class Moving_Obstacle {
-  // will code later, right now obstacle is in Lane
 }
 
 export class Tgttos extends Scene {
@@ -139,10 +146,15 @@ export class Tgttos extends Scene {
     })
 
     for (let i = 0; i < this.lanes.length; i++) {
-      this.models.drawObstacle(context, program_state, this.lanes[i].obstacle_transform)
-      this.lanes[i].setObstacleTransform(this.lanes[i].obstacle_transform
-        .times(Mat4.translation(50/this.lanes[i].obstacle_speed * this.lanes[i].obstacle_direction, 0, 0)));
-      this.models.drawGround(context, program_state, this.lanes[i].lane_transform, this.lanes[i].color);
+      for (let j = 0; j < this.lanes[i].obstacle.length; j++) {
+        let obstacle = this.lanes[i].obstacle[j];
+        this.models.drawObstacle(context, program_state, obstacle.obstacle_transform)
+        obstacle.setObstacleTransform(obstacle.obstacle_transform
+          .times(Mat4.translation(50/obstacle.obstacle_speed * obstacle.obstacle_direction, 0, 0)));
+      }
+
+
+      this.models.drawLane(context, program_state, this.lanes[i].lane_transform, this.lanes[i].color);
     }
 
     if (z > (this.chunks_rendered - 1) * 10 * 2 * this.lane_width + 2 * this.lane_width) {
