@@ -6,23 +6,42 @@ const {
 } = tiny;
 
 class Lane {
-  constructor(model_transform, color, lane_x_width) {
+  constructor(model_transform, color, lane_x_width, no_obstacles = false) {
     this.lane_transform = model_transform;
     this.color = color;
-    this.obstacle_count = Math.floor(Math.random() * 8)
+    this.obstacle_count = no_obstacles ? 0 : Math.floor(Math.random() * 4)
     this.obstacles = []
     for (let i = 0; i < this.obstacle_count; i++) {
-      this.obstacles.push(new Moving_Obstacle(model_transform, lane_x_width, 1));
+      let overlap = false;
+      let start_offset = 0;
+      do {
+        overlap = false;
+        start_offset = Math.random() * 2 * lane_x_width - lane_x_width
+        this.obstacles.forEach((obs) => {
+          if (Math.abs(start_offset - obs.x_pos) < 2) // 2 from radius of 1
+            overlap = true;
+        })
+      } while (overlap)
+      this.obstacles.push(new Moving_Obstacle(model_transform, lane_x_width, 1, start_offset));
     }
   }
 
   collide() {
     if (this.obstacle_count <= 1) return;
-    this.obstacles.forEach((obstacle1) => {
-      this.obstacles.forEach((obstacle2) => {
-        if (obstacle1.left_x < obstacle2.right_x && obstacle1.right_x > obstacle2.right_x) {
-          [obstacle1.speed, obstacle1.direction, obstacle2.speed, obstacle2.direction]
-          = [obstacle2.speed, obstacle2.direction, obstacle1.speed, obstacle1.direction]
+    this.obstacles.forEach((obs1) => {
+      this.obstacles.forEach((obs2) => {
+        const dist = obs1.x_pos - obs2.x_pos;
+        const min_dist = obs1.radius + obs2.radius;
+        if (dist > 0 && dist <= min_dist && obs1 !== obs2) {
+          [obs1.speed, obs2.speed, obs1.direction, obs2.direction] =
+            [obs2.speed, obs1.speed, obs2.direction, obs1.direction]
+          if (obs1.direction === obs2.direction)
+            obs1.transform[0][3] = obs2.transform[0][3] + min_dist; // force apart because buggy af otherwise
+          // alternate way of fixing wiggle bug, but sacrifices physics
+          // obs1.direction = 1;
+          // obs2.direction = -1;
+          if(dist <= min_dist / 2)
+            console.log('should not be happening (too often)')
         }
       })
     })
@@ -30,26 +49,33 @@ class Lane {
 }
 
 class Moving_Obstacle {
-  constructor(model_transform, x_bound, radius) {
+  constructor(model_transform, x_bound, radius, start_offset) {
     this.x_bound = x_bound
     this.radius = radius
-    this.start_offset = Math.random() * 2 * this.x_bound - this.x_bound;
+    this.start_offset = start_offset;
+    this.x_pos = this.start_offset;
     this.transform = Mat4.identity().times(Mat4.translation(this.start_offset, 0, model_transform[2][3]));
     this.speed = Math.random() * (500 - 100) + 100;
     this.direction = Math.round(Math.random()) ? 1 : -1
-    this.left_x = this.start_offset - radius
-    this.right_x = this.start_offset + radius
+    const r = Math.random() * 127 + 127;
+    const g = Math.random() * 127 + 127;
+    const b = Math.random() * 127 + 127;
+    this.color = color(r / 255, g / 255, b / 255, 1);
+    // this.left_x = this.start_offset - radius
+    // this.right_x = this.start_offset + radius
 
   }
 
   setObstacleTransform(model_transform) {
-    const x_pos = model_transform[0][3];
-    this.left_x = x_pos - this.radius;
-    this.right_x = x_pos + this.radius;
+    this.x_pos = model_transform[0][3];
+    // this.left_x = x_pos - this.radius;
+    // this.right_x = x_pos + this.radius;
     this.transform = model_transform;
-    if (x_pos <= -this.x_bound || x_pos >= this.x_bound) {
-      this.direction = -this.direction;
-    }
+    if (this.x_pos <= -this.x_bound)
+      this.direction = 1;
+    if( this.x_pos >= this.x_bound)
+      this.direction = -1;
+
   }
 }
 
@@ -74,7 +100,11 @@ export class Tgttos extends Scene {
       .times(Mat4.translation(0, -2, 0));
     this.lane_colors = [hex_color('#b2e644'), hex_color('#699e1c')]
     this.lanes = []
-    for(let i = 0; i < 16; i++) {
+
+    // special first lane
+    this.lanes.push(new Lane(this.lane_transform, this.lane_colors[0], this.x_bound, true));
+    this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
+    for(let i = 1; i < 16; i++) {
       this.lanes.push(new Lane(this.lane_transform, this.lane_colors[i % 2], this.x_bound));
       this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     }
@@ -171,7 +201,7 @@ export class Tgttos extends Scene {
     for (let i = 0; i < this.lanes.length; i++) {
       for (let j = 0; j < this.lanes[i].obstacles.length; j++) {
         let obstacle = this.lanes[i].obstacles[j];
-        this.models.drawObstacle(context, program_state, obstacle.transform)
+        this.models.drawObstacle(context, program_state, obstacle.transform, obstacle.color)
         obstacle.setObstacleTransform(obstacle.transform
           .times(Mat4.translation(50/obstacle.speed * obstacle.direction, 0, 0)));
       }

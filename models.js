@@ -25,7 +25,6 @@ export class Models {
         {ambient: 0.8, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
     };
   }
-
   backAndForth(model_transform, x, y, z) {
     return Mat4.translation(-x, -y, -z).times(model_transform).times(Mat4.translation(x, y, z));
   }
@@ -77,8 +76,8 @@ export class Models {
     this.shapes.cube.draw(context, program_state, model_transform, this.materials.ground.override({color: color}));
   }
 
-  drawObstacle(context, program_state, model_transform) {
-    this.shapes.cube.draw(context, program_state, model_transform, this.materials.obstacle);
+  drawObstacle(context, program_state, model_transform, color) {
+    this.shapes.cube.draw(context, program_state, model_transform, this.materials.obstacle.override({color: color}));
   }
 
   drawBackground(context, program_state, model_transform) {
