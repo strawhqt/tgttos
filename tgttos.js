@@ -212,8 +212,8 @@ export class Tgttos extends Scene {
     const num_lanes = this.chunks_rendered === 1 ? 16 : 26;
     const lane_start = lane_end - num_lanes * 2 * this.lane_width;
     const current_lane = Math.ceil(this.chunks_rendered === 1 ? 1 : (z - lane_start) / (2 * this.lane_width))
-    const chicken_x_rad = 0.6;
-    const chicken_z_rad = 0.42;
+    const chicken_x_rad = this.chicken_angle === 0 || this.chicken_angle === Math.PI ? 0.6 : 0.75;
+    const chicken_z_rad = this.chicken_angle === 0 || this.chicken_angle === Math.PI ? 0.75 : 0.6;
     for (let i = current_lane; i >= current_lane - 1; i--) {
       const lane = this.lanes[i];
       lane.obstacles.forEach((obs) => {
@@ -223,7 +223,7 @@ export class Tgttos extends Scene {
         const x_dist = Math.abs(obs.x_pos - x);
         const z_dist = Math.abs(obs_z_pos - z);
         if (x_dist < min_x && z_dist < min_z) {
-
+          obs.direction = !obs.direction;
           obs.color = color(1, 0, 0, 1);
         }
       })
