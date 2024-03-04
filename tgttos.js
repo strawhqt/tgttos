@@ -9,7 +9,7 @@ class Lane {
   constructor(model_transform, color, lane_x_width, no_obstacles = false) {
     this.lane_transform = model_transform;
     this.color = color;
-    this.obstacle_count = no_obstacles ? 0 : Math.floor(Math.random() * 4)
+    this.obstacle_count = no_obstacles ? 0 : Math.floor(Math.random() * 3)
     this.obstacles = []
     for (let i = 0; i < this.obstacle_count; i++) {
       let overlap = false;
@@ -26,7 +26,7 @@ class Lane {
     }
   }
 
-  collide() {
+  obstacle_collisions() {
     if (this.obstacle_count <= 1) return;
     this.obstacles.forEach((obs1) => {
       this.obstacles.forEach((obs2) => {
@@ -87,7 +87,7 @@ export class Tgttos extends Scene {
     this.moving_right = false;
     this.moving_forward = false;
     this.moving_back = false;
-    this.speed = 0.3;
+    this.speed = 1;
     this.x_bound = 20; // how far left and right player can move
     this.z_bound = -100;
     this.camera_z_bound = -100;
@@ -111,9 +111,9 @@ export class Tgttos extends Scene {
     this.moving = false;
     this.start_move_time = 0;
     this.tweak_angle = 0;
-    this.first_clear_lanes = false;
     this.eggs = [];
     this.chicken_height = 0;
+    this.highlight = false;
   }
 
   make_control_panel() {
@@ -123,6 +123,7 @@ export class Tgttos extends Scene {
     this.key_triggered_button("Back", ["s"], () => this.moving_back = true, '#6E6460', () => this.moving_back = false);
     this.key_triggered_button("Right", ["d"], () => this.moving_right = true, '#6E6460', () => this.moving_right = false);
     this.key_triggered_button("Egg", [" "], () => { this.eggs.push(this.default_chicken_transform); this.eggs = this.eggs.slice(-10);}, '#6E6460');
+    this.key_triggered_button("highlight checked lanes", ["h"], () => this.highlight = !this.highlight, '#6E6460');
   }
 
   handle_movement(model_transform, left, right, forward, back, speed, x_pos, z_pos, t) {
@@ -174,7 +175,8 @@ export class Tgttos extends Scene {
     const z = -this.default_chicken_transform[2][3]; // +z into the page
     this.z_bound = Math.max(this.z_bound, z - this.lane_width);
     this.camera_z_bound = Math.max(this.camera_z_bound, z);
-    // attaches camera to cube
+
+      // attaches camera to cube
     program_state.set_camera(Mat4.identity()
       .times(Mat4.translation(0, -4, -35))
       .times(Mat4.rotation(Math.PI / 6, 1, 0, 0))
@@ -198,6 +200,29 @@ export class Tgttos extends Scene {
       this.models.drawEgg(context, program_state, egg_model_transform);
     })
 
+
+    // chicken collisions
+    const lane_end = (2 * this.lane_width) * ((this.chunks_rendered) * 10) + 6 * 2 * this.lane_width;
+    const num_lanes = this.chunks_rendered === 1 ? 16 : 26;
+    const lane_start = lane_end - num_lanes * 2 * this.lane_width;
+    const current_lane = Math.ceil(this.chunks_rendered === 1 ? 1 : (z - lane_start) / (2*this.lane_width))
+    const chicken_x_rad = 0.6;
+    const chicken_z_rad = 0.42;
+    for (let i = current_lane; i >= current_lane - 1; i--) {
+      const lane = this.lanes[i];
+      lane.obstacles.forEach((obs) => {
+        const min_x = chicken_x_rad + obs.radius;
+        const min_z = chicken_z_rad + obs.radius;
+        const obs_z_pos = lane_start + i * 2 * this.lane_width;
+        const x_dist = Math.abs(obs.x_pos - x);
+        const z_dist = Math.abs(obs_z_pos - z);
+        if (x_dist < min_x && z_dist < min_z) {
+
+          obs.color = color(1, 0, 0, 1);
+        }
+      })
+    }
+
     for (let i = 0; i < this.lanes.length; i++) {
       for (let j = 0; j < this.lanes[i].obstacles.length; j++) {
         let obstacle = this.lanes[i].obstacles[j];
@@ -206,20 +231,20 @@ export class Tgttos extends Scene {
           .times(Mat4.translation(50/obstacle.speed * obstacle.direction, 0, 0)));
       }
 
-      this.lanes[i].collide();
-      this.models.drawLane(context, program_state, this.lanes[i].lane_transform, this.lanes[i].color);
+      this.lanes[i].obstacle_collisions();
+      let lane_color = this.lanes[i].color;
+      if (this.highlight && (i === current_lane || i === current_lane - 1))
+        lane_color = hex_color('#ffd400');
+      this.models.drawLane(context, program_state, this.lanes[i].lane_transform, lane_color);
     }
 
     if (z > (this.chunks_rendered - 1) * 10 * 2 * this.lane_width + 2 * this.lane_width) {
       this.chunks_rendered++;
+      this.lanes = this.lanes.slice(-16);
       for (let i = 0; i < 10; i++) {
         this.lanes.push(new Lane(this.lane_transform, this.lane_colors[i % 2], this.x_bound));
         this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
-        if (this.first_clear_lanes) {
-          this.lanes.shift();
-        }
       }
-      this.first_clear_lanes = true;
     }
   }
 }

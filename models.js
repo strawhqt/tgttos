@@ -51,7 +51,7 @@ export class Models {
     ;
     const eye_transform = head_transform
       .times(Mat4.translation(0, 0.1, -0.2))
-      .times(Mat4.scale(1.01, 0.2, 0.2));
+      .times(Mat4.scale(1.04, 0.2, 0.2));
     const hat_transform = body_transform
       .times(Mat4.translation(0, 3.4, 0.2))
       .times(this.backAndForth(Mat4.scale(0.3, 0.2, 0.4), 0, 1, 1))
