@@ -1,83 +1,10 @@
 import {defs, tiny} from './examples/common.js';
 import {Models} from './models.js';
+import {Lane} from "./lane.js";
 
 const {
   Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene,
 } = tiny;
-
-class Lane {
-  constructor(model_transform, color, lane_x_width, no_obstacles = false) {
-    this.lane_transform = model_transform;
-    this.color = color;
-    this.obstacle_count = no_obstacles ? 0 : Math.floor(Math.random() * 3)
-    this.obstacles = []
-    for (let i = 0; i < this.obstacle_count; i++) {
-      let overlap = false;
-      let start_offset = 0;
-      do {
-        overlap = false;
-        start_offset = Math.random() * 2 * lane_x_width - lane_x_width
-        this.obstacles.forEach((obs) => {
-          if (Math.abs(start_offset - obs.x_pos) < 2) // 2 from radius of 1
-            overlap = true;
-        })
-      } while (overlap)
-      this.obstacles.push(new Moving_Obstacle(model_transform, lane_x_width, 1, start_offset));
-    }
-  }
-
-  obstacle_collisions() {
-    if (this.obstacle_count <= 1) return;
-    this.obstacles.forEach((obs1) => {
-      this.obstacles.forEach((obs2) => {
-        const dist = obs1.x_pos - obs2.x_pos;
-        const min_dist = obs1.radius + obs2.radius;
-        if (dist > 0 && dist <= min_dist && obs1 !== obs2) {
-          [obs1.speed, obs2.speed, obs1.direction, obs2.direction] =
-            [obs2.speed, obs1.speed, obs2.direction, obs1.direction]
-          if (obs1.direction === obs2.direction)
-            obs1.transform[0][3] = obs2.transform[0][3] + min_dist; // force apart because buggy af otherwise
-          // alternate way of fixing wiggle bug, but sacrifices physics
-          // obs1.direction = 1;
-          // obs2.direction = -1;
-          if (dist <= min_dist / 2)
-            console.log('should not be happening (too often)')
-        }
-      })
-    })
-  }
-}
-
-class Moving_Obstacle {
-  constructor(model_transform, x_bound, radius, start_offset) {
-    this.x_bound = x_bound
-    this.radius = radius
-    this.start_offset = start_offset;
-    this.x_pos = this.start_offset;
-    this.transform = Mat4.identity().times(Mat4.translation(this.start_offset, 0, model_transform[2][3]));
-    this.speed = Math.random() * (500 - 100) + 100;
-    this.direction = Math.round(Math.random()) ? 1 : -1
-    const r = Math.random() * 127 + 127;
-    const g = Math.random() * 127 + 127;
-    const b = Math.random() * 127 + 127;
-    this.color = color(r / 255, g / 255, b / 255, 1);
-    // this.left_x = this.start_offset - radius
-    // this.right_x = this.start_offset + radius
-
-  }
-
-  setObstacleTransform(model_transform) {
-    this.x_pos = model_transform[0][3];
-    // this.left_x = x_pos - this.radius;
-    // this.right_x = x_pos + this.radius;
-    this.transform = model_transform;
-    if (this.x_pos <= -this.x_bound)
-      this.direction = 1;
-    if (this.x_pos >= this.x_bound)
-      this.direction = -1;
-
-  }
-}
 
 export class Tgttos extends Scene {
 
@@ -220,29 +147,26 @@ export class Tgttos extends Scene {
         const min_x = chicken_x_rad + obs.radius;
         const min_z = chicken_z_rad + obs.radius;
         const obs_z_pos = lane_start + i * 2 * this.lane_width;
-        const x_dist = Math.abs(obs.x_pos - x);
-        const z_dist = Math.abs(obs_z_pos - z);
-        if (x_dist < min_x && z_dist < min_z) {
-          obs.direction = !obs.direction;
+        const x_dist = (obs.x_pos - x);
+        const z_dist = Math.abs(z - obs_z_pos);
+        if (z_dist < min_z && Math.abs(x_dist) < min_x) {
+          if (x_dist < 0) {
+            obs.direction = -1;
+            obs.transform[0][3] = x - min_x;
+          }
+          else {
+            obs.direction = 1;
+            obs.transform[0][3] = x + min_x;
+
+          }
           obs.color = color(1, 0, 0, 1);
         }
       })
     }
 
-    for (let i = 0; i < this.lanes.length; i++) {
-      for (let j = 0; j < this.lanes[i].obstacles.length; j++) {
-        let obstacle = this.lanes[i].obstacles[j];
-        this.models.drawObstacle(context, program_state, obstacle.transform, obstacle.color)
-        obstacle.setObstacleTransform(obstacle.transform
-          .times(Mat4.translation(100 / obstacle.speed * obstacle.direction, 0, 0)));
-      }
-
-      this.lanes[i].obstacle_collisions();
-      let lane_color = this.lanes[i].color;
-      if (this.highlight && (i === current_lane || i === current_lane - 1))
-        lane_color = hex_color('#ffd400');
-      this.models.drawLane(context, program_state, this.lanes[i].lane_transform, lane_color);
-    }
+    this.lanes.forEach((lane, i) => {
+      lane.handleObstacles(context, program_state, this.models, this.highlight && (i === current_lane || i === current_lane - 1));
+    })
 
     if (z > (this.chunks_rendered - 1) * 10 * 2 * this.lane_width + 2 * this.lane_width) {
       this.chunks_rendered++;
