@@ -40,7 +40,7 @@ class Lane {
           // alternate way of fixing wiggle bug, but sacrifices physics
           // obs1.direction = 1;
           // obs2.direction = -1;
-          if(dist <= min_dist / 2)
+          if (dist <= min_dist / 2)
             console.log('should not be happening (too often)')
         }
       })
@@ -73,7 +73,7 @@ class Moving_Obstacle {
     this.transform = model_transform;
     if (this.x_pos <= -this.x_bound)
       this.direction = 1;
-    if( this.x_pos >= this.x_bound)
+    if (this.x_pos >= this.x_bound)
       this.direction = -1;
 
   }
@@ -87,7 +87,7 @@ export class Tgttos extends Scene {
     this.moving_right = false;
     this.moving_forward = false;
     this.moving_back = false;
-    this.speed = 1;
+    this.speed = 40;
     this.x_bound = 20; // how far left and right player can move
     this.z_bound = -100;
     this.camera_z_bound = -100;
@@ -104,7 +104,7 @@ export class Tgttos extends Scene {
     // special first lane
     this.lanes.push(new Lane(this.lane_transform, this.lane_colors[0], this.x_bound, true));
     this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
-    for(let i = 1; i < 16; i++) {
+    for (let i = 1; i < 16; i++) {
       this.lanes.push(new Lane(this.lane_transform, this.lane_colors[i % 2], this.x_bound));
       this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     }
@@ -122,15 +122,20 @@ export class Tgttos extends Scene {
     this.key_triggered_button("Left", ["a"], () => this.moving_left = true, '#6E6460', () => this.moving_left = false);
     this.key_triggered_button("Back", ["s"], () => this.moving_back = true, '#6E6460', () => this.moving_back = false);
     this.key_triggered_button("Right", ["d"], () => this.moving_right = true, '#6E6460', () => this.moving_right = false);
-    this.key_triggered_button("Egg", [" "], () => { this.eggs.push(this.default_chicken_transform); this.eggs = this.eggs.slice(-10);}, '#6E6460');
+    this.key_triggered_button("Egg", [" "], () => {
+      this.eggs.push(this.default_chicken_transform);
+      this.eggs = this.eggs.slice(-10);
+    }, '#6E6460');
     this.key_triggered_button("highlight checked lanes", ["h"], () => this.highlight = !this.highlight, '#6E6460');
   }
 
-  handle_movement(model_transform, left, right, forward, back, speed, x_pos, z_pos, t) {
+  /*
+    */
+  handle_movement(model_transform, left, right, forward, back, x_pos, z_pos, t, dt) {
     const x_trans = (x_pos >= this.x_bound && right - left > 0) || (x_pos <= -this.x_bound && right - left < 0)
-      ? 0 : (right - left) * speed;
+      ? 0 : (right - left) * this.speed * dt;
     const z_trans = (z_pos <= this.z_bound && forward - back < 0)
-        ? 0 : (back - forward) * speed;
+      ? 0 : (back - forward) * this.speed * dt;
     if (left - right > 0) this.chicken_angle = Math.PI / 2;
     else if (right - left > 0) this.chicken_angle = -Math.PI / 2
     if (forward - back > 0) this.chicken_angle = 0;
@@ -164,24 +169,25 @@ export class Tgttos extends Scene {
     }
 
     const t = program_state.animation_time / 1000;
+    const dt = program_state.animation_delta_time / 1000;
 
     // position of the chicken
     const old_x = this.default_chicken_transform[0][3]; // +x on the right
     const old_z = -this.default_chicken_transform[2][3]; // +z into the page
 
     // attaches movement controls to cube
-    this.default_chicken_transform = this.handle_movement(this.default_chicken_transform, this.moving_left, this.moving_right, this.moving_forward, this.moving_back, this.speed, old_x, old_z, t);
+    this.default_chicken_transform = this.handle_movement(this.default_chicken_transform, this.moving_left, this.moving_right, this.moving_forward, this.moving_back, old_x, old_z, t, dt);
     const x = this.default_chicken_transform[0][3]; // +x on the right
     const z = -this.default_chicken_transform[2][3]; // +z into the page
     this.z_bound = Math.max(this.z_bound, z - this.lane_width);
     this.camera_z_bound = Math.max(this.camera_z_bound, z);
 
-      // attaches camera to cube
+    // attaches camera to cube
     program_state.set_camera(Mat4.identity()
       .times(Mat4.translation(0, -4, -35))
       .times(Mat4.rotation(Math.PI / 6, 1, 0, 0))
       .times(Mat4.translation(0, 0, this.camera_z_bound))
-      );
+    );
 
     program_state.projection_transform = Mat4.perspective(
       Math.PI / 4.5, context.width / context.height, 1, 200);
@@ -205,7 +211,7 @@ export class Tgttos extends Scene {
     const lane_end = (2 * this.lane_width) * ((this.chunks_rendered) * 10) + 6 * 2 * this.lane_width;
     const num_lanes = this.chunks_rendered === 1 ? 16 : 26;
     const lane_start = lane_end - num_lanes * 2 * this.lane_width;
-    const current_lane = Math.ceil(this.chunks_rendered === 1 ? 1 : (z - lane_start) / (2*this.lane_width))
+    const current_lane = Math.ceil(this.chunks_rendered === 1 ? 1 : (z - lane_start) / (2 * this.lane_width))
     const chicken_x_rad = 0.6;
     const chicken_z_rad = 0.42;
     for (let i = current_lane; i >= current_lane - 1; i--) {
@@ -228,7 +234,7 @@ export class Tgttos extends Scene {
         let obstacle = this.lanes[i].obstacles[j];
         this.models.drawObstacle(context, program_state, obstacle.transform, obstacle.color)
         obstacle.setObstacleTransform(obstacle.transform
-          .times(Mat4.translation(50/obstacle.speed * obstacle.direction, 0, 0)));
+          .times(Mat4.translation(100 / obstacle.speed * obstacle.direction, 0, 0)));
       }
 
       this.lanes[i].obstacle_collisions();
