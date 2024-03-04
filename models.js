@@ -1,6 +1,7 @@
 import {defs, tiny} from './examples/common.js';
+import {Text_Line} from "./examples/text-demo.js";
 const {
-  Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene,
+  Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene, Texture,
 } = tiny;
 
 export class Models {
@@ -9,7 +10,9 @@ export class Models {
       cube: new defs.Cube(),
       triangle: new defs.Triangle(),
       egg: new defs.Subdivision_Sphere(4),
+      text: new Text_Line(8),
     }
+    const texture = new defs.Textured_Phong(1);
     this.materials = {
       plastic: new Material(new defs.Phong_Shader(),
         {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
@@ -23,8 +26,13 @@ export class Models {
         {ambient: 1, diffusivity: 0, specularity: 0, color: hex_color("#009dc4")}),
       egg: new Material(new defs.Phong_Shader(),
         {ambient: 0.8, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
+      text_image: new Material(texture, {
+        ambient: 1, diffusivity: 0, specularity: 0,
+        texture: new Texture("assets/text.png")
+      })
     };
   }
+
   backAndForth(model_transform, x, y, z) {
     return Mat4.translation(-x, -y, -z).times(model_transform).times(Mat4.translation(x, y, z));
   }
@@ -73,6 +81,8 @@ export class Models {
   }
 
   drawLane(context, program_state, model_transform, color) {
+    // this.shapes.score.set_string("sadaf", context);
+    // this.shapes.score.draw(context, program_state, model_transform, this.materials.text_image);
     this.shapes.cube.draw(context, program_state, model_transform, this.materials.ground.override({color: color}));
   }
 
@@ -96,7 +106,15 @@ export class Models {
       .times(Mat4.translation(0, 0, 1));
     // this.shapes.egg.draw(context, program_state, egg_base_model, this.materials.egg);
     this.shapes.egg.draw(context, program_state, egg_model, this.materials.egg);
+  }
 
+  drawScore(context, program_state, z, score) {
+    const text_model_transform = Mat4.translation(0, 0, -z)
+      .times(Mat4.translation(-14, 15.5, 0))
+      .times(Mat4.rotation(-Math.PI / 6.5, 1, 0, 0))
+    ;
+    this.shapes.text.set_string(score, context.context);
+    this.shapes.text.draw(context, program_state, text_model_transform, this.materials.text_image);
   }
 
 }

@@ -41,6 +41,7 @@ export class Tgttos extends Scene {
     this.eggs = [];
     this.chicken_height = 0;
     this.highlight = false;
+    this.score = 0;
   }
 
   make_control_panel() {
@@ -133,7 +134,9 @@ export class Tgttos extends Scene {
       this.models.drawEgg(context, program_state, egg_model_transform);
     })
 
-
+    // score
+    this.score = Math.max(this.score, Math.floor(z / (2 * this.lane_width)));
+    this.models.drawScore(context, program_state, this.z_bound, this.score.toString())
     // chicken collisions
     const lane_end = (2 * this.lane_width) * ((this.chunks_rendered) * 10) + 6 * 2 * this.lane_width;
     const num_lanes = this.chunks_rendered === 1 ? 16 : 26;
