@@ -103,7 +103,8 @@ export class Tgttos extends Scene {
 
     const t = program_state.animation_time / 1000;
     const dt = program_state.animation_delta_time / 1000;
-
+    if (dt > 0.1)
+      console.log(dt)
     // position of the chicken
     const old_x = this.default_chicken_transform[0][3]; // +x on the right
     const old_z = -this.default_chicken_transform[2][3]; // +z into the page
@@ -173,7 +174,8 @@ export class Tgttos extends Scene {
     }
 
     this.lanes.forEach((lane, i) => {
-      lane.handleObstacles(context, program_state, this.models, this.highlight && (i === current_lane || i === current_lane - 1));
+      const highlight_lane = this.highlight && (i === current_lane || i === current_lane - 1);
+      lane.handleObstacles(context, program_state, this.models, dt, highlight_lane);
     })
 
     if (z > (this.chunks_rendered - 1) * 10 * 2 * this.lane_width + 2 * this.lane_width) {

@@ -72,8 +72,8 @@ export class Models {
       .times(this.backAndForth(Mat4.scale(0.2, 0.8, 0.13), 0, -1, -1))
     this.shapes.cube.draw(context, program_state, model_transform.times(body_transform), this.materials.cube);
     this.shapes.cube.draw(context, program_state, model_transform.times(head_transform), this.materials.cube);
-    this.shapes.cube.draw(context, program_state,  model_transform.times(right_wing_transform), this.materials.cube);
-    this.shapes.cube.draw(context, program_state,  model_transform.times(left_wing_transform), this.materials.cube);
+    this.shapes.cube.draw(context, program_state, model_transform.times(right_wing_transform), this.materials.cube);
+    this.shapes.cube.draw(context, program_state, model_transform.times(left_wing_transform), this.materials.cube);
     this.shapes.cube.draw(context, program_state, model_transform.times(eye_transform), this.materials.cube.override({color: vec4(0, 0, 0, 1)}));
     this.shapes.cube.draw(context, program_state, model_transform.times(hat_transform), this.materials.cube.override({color: vec4(1, 0, 0, 1)}));
     this.shapes.cube.draw(context, program_state, model_transform.times(beak_transform), this.materials.cube.override({color: hex_color('#FFA500')}));

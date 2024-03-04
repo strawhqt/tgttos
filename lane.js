@@ -48,13 +48,11 @@ export class Lane {
     })
   }
 
-  handleObstacles(context, program_state, models, highlighted = false) {
+  handleObstacles(context, program_state, models, dt, highlighted = false) {
     this.obstacles.forEach((obstacle) => {
+      obstacle.handlePosition(dt);
       models.drawObstacle(context, program_state, obstacle.transform, obstacle.color)
-      obstacle.setObstacleTransform(obstacle.transform
-        .times(Mat4.translation(100 / obstacle.speed * obstacle.direction, 0, 0)));
     })
-
     this.obstacle_collisions();
     let lane_color = this.color;
     if (highlighted)
@@ -70,7 +68,7 @@ class Moving_Obstacle {
     this.start_offset = start_offset;
     this.x_pos = this.start_offset;
     this.transform = Mat4.identity().times(Mat4.translation(this.start_offset, 0, model_transform[2][3]));
-    this.speed = Math.random() * (500 - 100) + 100;
+    this.speed = Math.random() * (50 - 10) + 10;
     this.direction = Math.round(Math.random()) ? 1 : -1
     const r = Math.random() * 127 + 127;
     const g = Math.random() * 127 + 127;
@@ -81,15 +79,19 @@ class Moving_Obstacle {
 
   }
 
-  setObstacleTransform(model_transform) {
-    this.x_pos = model_transform[0][3];
-    // this.left_x = x_pos - this.radius;
-    // this.right_x = x_pos + this.radius;
-    this.transform = model_transform;
-    if (this.x_pos <= -this.x_bound)
+  handlePosition(dt) {
+    const new_transform = this.transform
+      .times(Mat4.translation(this.speed * dt * this.direction, 0, 0));
+    const new_x = new_transform[0][3];
+    if (new_x <= -this.x_bound) {
+      new_transform[0][3] = -this.x_bound;
       this.direction = 1;
-    if (this.x_pos >= this.x_bound)
+    }
+    if (new_x >= this.x_bound) {
+      new_transform[0][3] = this.x_bound;
       this.direction = -1;
-
+    }
+    this.transform = new_transform;
+    this.x_pos = new_transform[0][3];
   }
 }
