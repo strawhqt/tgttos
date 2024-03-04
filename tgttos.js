@@ -9,29 +9,46 @@ class Lane {
   constructor(model_transform, color, lane_x_width) {
     this.lane_transform = model_transform;
     this.color = color;
-    this.obstacle_count = Math.floor(Math.random() * 3)
-    this.obstacle = []
+    this.obstacle_count = Math.floor(Math.random() * 8)
+    this.obstacles = []
     for (let i = 0; i < this.obstacle_count; i++) {
-      this.obstacle.push(new Moving_Obstacle(model_transform, lane_x_width));
+      this.obstacles.push(new Moving_Obstacle(model_transform, lane_x_width, 1));
     }
+  }
+
+  collide() {
+    if (this.obstacle_count <= 1) return;
+    this.obstacles.forEach((obstacle1) => {
+      this.obstacles.forEach((obstacle2) => {
+        if (obstacle1.left_x < obstacle2.right_x && obstacle1.right_x > obstacle2.right_x) {
+          [obstacle1.speed, obstacle1.direction, obstacle2.speed, obstacle2.direction]
+          = [obstacle2.speed, obstacle2.direction, obstacle1.speed, obstacle1.direction]
+        }
+      })
+    })
   }
 }
 
 class Moving_Obstacle {
-  constructor(model_transform, x_bound) {
+  constructor(model_transform, x_bound, radius) {
     this.x_bound = x_bound
-    this.obstacle_start_offset = Math.random() * 2 * this.x_bound - this.x_bound;
-    this.obstacle_transform = Mat4.identity().times(Mat4.translation(this.obstacle_start_offset, 0, model_transform[2][3]));
-    this.obstacle_speed = Math.random() * (500 - 100) + 100;
-    this.obstacle_direction = Math.round(Math.random()) ? 1 : -1
+    this.radius = radius
+    this.start_offset = Math.random() * 2 * this.x_bound - this.x_bound;
+    this.transform = Mat4.identity().times(Mat4.translation(this.start_offset, 0, model_transform[2][3]));
+    this.speed = Math.random() * (500 - 100) + 100;
+    this.direction = Math.round(Math.random()) ? 1 : -1
+    this.left_x = this.start_offset - radius
+    this.right_x = this.start_offset + radius
 
   }
 
   setObstacleTransform(model_transform) {
     const x_pos = model_transform[0][3];
-    this.obstacle_transform = model_transform;
+    this.left_x = x_pos - this.radius;
+    this.right_x = x_pos + this.radius;
+    this.transform = model_transform;
     if (x_pos <= -this.x_bound || x_pos >= this.x_bound) {
-      this.obstacle_direction = -this.obstacle_direction
+      this.direction = -this.direction;
     }
   }
 }
@@ -66,6 +83,7 @@ export class Tgttos extends Scene {
     this.tweak_angle = 0;
     this.first_clear_lanes = false;
     this.eggs = [];
+    this.chicken_height = 0;
   }
 
   make_control_panel() {
@@ -74,7 +92,7 @@ export class Tgttos extends Scene {
     this.key_triggered_button("Left", ["a"], () => this.moving_left = true, '#6E6460', () => this.moving_left = false);
     this.key_triggered_button("Back", ["s"], () => this.moving_back = true, '#6E6460', () => this.moving_back = false);
     this.key_triggered_button("Right", ["d"], () => this.moving_right = true, '#6E6460', () => this.moving_right = false);
-    this.key_triggered_button("Egg", [" "], () => { this.eggs.push(this.default_chicken_transform); this.eggs = this.eggs.slice(-10)}, '#6E6460');
+    this.key_triggered_button("Egg", [" "], () => { this.eggs.push(this.default_chicken_transform); this.eggs = this.eggs.slice(-10);}, '#6E6460');
   }
 
   handle_movement(model_transform, left, right, forward, back, speed, x_pos, z_pos, t) {
@@ -90,16 +108,18 @@ export class Tgttos extends Scene {
     if (this.moving) {
       if (!this.start_move_time)
         this.start_move_time = t;
-      if (this.tweak_angle)
-        this.tweak_angle = 0.2 * Math.sin(40 * (t - this.start_move_time));
-      else
-        this.tweak_angle = Math.PI / 8;
+      this.tweak_angle = Math.PI / 3 * (Math.sin(60 * (t - this.start_move_time) - Math.PI / 2) + 2) / 2;
+      this.chicken_height = 0.5 * (Math.sin(34 * (t - this.start_move_time) - Math.PI / 2) + 1)
+
     } else {
       this.start_move_time = 0;
       this.tweak_angle = 0;
+      this.chicken_height = 0;
     }
+
     return Mat4.translation(x_trans, 0, z_trans).times(model_transform);
   }
+
   display(context, program_state) {
     // display():  Called once per frame of animation. Here, the base class's display only does some initial setup.
 
@@ -139,27 +159,29 @@ export class Tgttos extends Scene {
     program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 100)];
 
     // main character
-    this.models.drawChicken(context, program_state, this.default_chicken_transform.times(Mat4.rotation(this.chicken_angle, 0, 1, 0).times(Mat4.rotation(this.tweak_angle, 0, 0, 1))), this.moving);
+    const chicken_model_transform = this.default_chicken_transform
+      .times(Mat4.rotation(this.chicken_angle, 0, 1, 0))
+      .times(Mat4.translation(0, this.chicken_height, 0));
+    this.models.drawChicken(context, program_state, chicken_model_transform, this.moving, this.tweak_angle);
     this.models.drawBackground(context, program_state, this.default_chicken_transform);
     this.eggs.forEach((egg_model_transform) => {
       this.models.drawEgg(context, program_state, egg_model_transform);
     })
 
     for (let i = 0; i < this.lanes.length; i++) {
-      for (let j = 0; j < this.lanes[i].obstacle.length; j++) {
-        let obstacle = this.lanes[i].obstacle[j];
-        this.models.drawObstacle(context, program_state, obstacle.obstacle_transform)
-        obstacle.setObstacleTransform(obstacle.obstacle_transform
-          .times(Mat4.translation(50/obstacle.obstacle_speed * obstacle.obstacle_direction, 0, 0)));
+      for (let j = 0; j < this.lanes[i].obstacles.length; j++) {
+        let obstacle = this.lanes[i].obstacles[j];
+        this.models.drawObstacle(context, program_state, obstacle.transform)
+        obstacle.setObstacleTransform(obstacle.transform
+          .times(Mat4.translation(50/obstacle.speed * obstacle.direction, 0, 0)));
       }
 
-
+      this.lanes[i].collide();
       this.models.drawLane(context, program_state, this.lanes[i].lane_transform, this.lanes[i].color);
     }
 
     if (z > (this.chunks_rendered - 1) * 10 * 2 * this.lane_width + 2 * this.lane_width) {
       this.chunks_rendered++;
-      console.log(z);
       for (let i = 0; i < 10; i++) {
         this.lanes.push(new Lane(this.lane_transform, this.lane_colors[i % 2], this.x_bound));
         this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
@@ -168,7 +190,6 @@ export class Tgttos extends Scene {
         }
       }
       this.first_clear_lanes = true;
-      console.log(this.lanes);
     }
   }
 }

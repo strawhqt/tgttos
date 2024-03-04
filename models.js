@@ -29,24 +29,27 @@ export class Models {
   backAndForth(model_transform, x, y, z) {
     return Mat4.translation(-x, -y, -z).times(model_transform).times(Mat4.translation(x, y, z));
   }
-  drawChicken(context, program_state, model_transform, moving) {
+  drawChicken(context, program_state, model_transform, moving, wing_angle) {
     const body_transform = this.backAndForth(Mat4.scale(0.6, 0.6, 0.75), 0, 1, 0);
+
     const head_transform = Mat4.translation(0, 0, 0)
       .times(body_transform)
       .times(Mat4.translation(0, 1, -1))
       .times(Mat4.scale(1, 0.7, 0.7))
       .times(Mat4.translation(0, 1, 1));
-    const wing_angle = moving ? Math.PI / 2 : 0;
+    // const wing_angle = moving ? Math.PI / 2 : 0;
     const right_wing_transform = body_transform
-      .times(Mat4.translation(2, -0.2, -0.1))
+      .times(Mat4.translation(1, -0.2, 0.1))
       .times(Mat4.scale(1, 0.6, 0.7))
-      .times(this.backAndForth(Mat4.rotation(-wing_angle, 0, 0, 1), 0, 0, 1))
-      .times(this.backAndForth(Mat4.scale(0.2, 1, 1), 1, 0, 0));
+      .times(this.backAndForth(Mat4.rotation(wing_angle, 0, 0, 1), 0.2, -1, 0))
+      .times(Mat4.scale(0.2, 1, 1))
+    ;
     const left_wing_transform = body_transform
-      .times(Mat4.translation(-2, -0.2, -0.1))
+      .times(Mat4.translation(-1, -0.2, -0.1))
       .times(Mat4.scale(1, 0.6, 0.7))
-      .times(this.backAndForth(Mat4.rotation(wing_angle, 0, 0, 1), 0, 0, 1))
-      .times(this.backAndForth(Mat4.scale(0.2, 1, 1), -1, 0, 0));
+      .times(this.backAndForth(Mat4.rotation(-wing_angle, 0, 0, 1), -0.2, -1, 0))
+      .times(Mat4.scale(0.2, 1, 1))
+    ;
     const eye_transform = head_transform
       .times(Mat4.translation(0, 0.1, -0.2))
       .times(Mat4.scale(1.01, 0.2, 0.2));
