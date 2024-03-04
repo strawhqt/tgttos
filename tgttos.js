@@ -53,6 +53,11 @@ export class Tgttos extends Scene {
     this.key_triggered_button("Egg", [" "], () => {
       this.eggs.push(this.default_chicken_transform);
       this.eggs = this.eggs.slice(-10);
+      const speed_change = 20;
+      this.speed += speed_change;
+      setTimeout(() => {
+        this.speed -= speed_change;
+      }, 500)
     }, '#6E6460');
     this.key_triggered_button("highlight checked lanes", ["h"], () => this.highlight = !this.highlight, '#6E6460');
   }
