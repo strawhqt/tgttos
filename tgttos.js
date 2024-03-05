@@ -44,7 +44,7 @@ export class Tgttos extends Scene {
     this.chicken_height = 0;
     this.highlight = false;
     this.score = 0;
-
+    this.invincible = false;
     this.dead = false;
   }
   make_control_panel() {
@@ -67,6 +67,7 @@ export class Tgttos extends Scene {
     this.key_triggered_button("restart", ["r"], () => {
       this.init();
     })
+    this.key_triggered_button("invincibility", ["i"], () => this.invincible = !this.invincible)
   }
 
   /*
@@ -171,7 +172,7 @@ export class Tgttos extends Scene {
     for (let i = current_lane_z; i >= current_lane_z - 1; i--) {
       const lane = this.lanes[i];
       const lane_z = first_lane_z + i * 2 * this.lane_width;
-      if (lane.check_collision(x, z, chicken_x_rad, chicken_z_rad, lane_z)) {
+      if (lane.check_collision(x, z, chicken_x_rad, chicken_z_rad, lane_z) && !this.invincible) {
         this.dead = true;
       }
     }
