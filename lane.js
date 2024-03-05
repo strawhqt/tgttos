@@ -9,7 +9,7 @@ export class Lane {
   constructor(model_transform, color, lane_x_width, no_obstacles = false) {
     this.lane_transform = model_transform;
     this.color = color;
-    this.obstacle_count = no_obstacles ? 0 : Math.floor(Math.random() * 3);
+    this.obstacle_count = no_obstacles ? 0 : Math.floor(Math.random() * 4);
     this.obstacles = [];
 
     for (let i = 0; i < this.obstacle_count; i++) {
@@ -23,7 +23,7 @@ export class Lane {
             overlap = true;
         })
       } while (overlap)
-      this.obstacles.push(new Moving_Obstacle(model_transform, lane_x_width, 1, start_offset));
+      this.obstacles.push(new MovingObstacle(model_transform, lane_x_width, 1, start_offset));
     }
   }
 
@@ -48,9 +48,9 @@ export class Lane {
     })
   }
 
-  handleObstacles(context, program_state, models, dt, highlighted = false) {
+  handle_obstacles(context, program_state, models, dt, highlighted = false) {
     this.obstacles.forEach((obstacle) => {
-      obstacle.handlePosition(dt);
+      obstacle.handle_position(dt);
       models.drawObstacle(context, program_state, obstacle.transform, obstacle.color)
     })
     this.obstacle_collisions();
@@ -59,9 +59,31 @@ export class Lane {
       lane_color = hex_color('#ffd400');
     models.drawLane(context, program_state, this.lane_transform, lane_color);
   }
+
+  check_collision(x, z, x_rad, z_rad, lane_z) {
+    this.obstacles.forEach((obs) => {
+      const min_x = x_rad + obs.radius;
+      const min_z = z_rad + obs.radius;
+      const obs_z_pos = lane_z;
+      const x_dist = (obs.x_pos - x);
+      const z_dist = Math.abs(z - obs_z_pos);
+      if (z_dist < min_z && Math.abs(x_dist) < min_x) {
+        if (x_dist < 0) {
+          obs.direction = -1;
+          obs.transform[0][3] = x - min_x;
+        }
+        else {
+          obs.direction = 1;
+          obs.transform[0][3] = x + min_x;
+
+        }
+        obs.color = color(1, 0, 0, 1);
+      }
+    })
+  }
 }
 
-class Moving_Obstacle {
+class MovingObstacle {
   constructor(model_transform, x_bound, radius, start_offset) {
     this.x_bound = x_bound
     this.radius = radius
@@ -79,7 +101,7 @@ class Moving_Obstacle {
 
   }
 
-  handlePosition(dt) {
+  handle_position(dt) {
     const new_transform = this.transform
       .times(Mat4.translation(this.speed * dt * this.direction, 0, 0));
     const new_x = new_transform[0][3];

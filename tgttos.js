@@ -90,9 +90,6 @@ export class Tgttos extends Scene {
   }
 
   display(context, program_state) {
-    // display():  Called once per frame of animation. Here, the base class's display only does some initial setup.
-
-    // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
 
     if (!context.scratchpad.controls) {
       this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
@@ -143,41 +140,28 @@ export class Tgttos extends Scene {
     // score
     this.score = Math.max(this.score, Math.floor(z / (2 * this.lane_width)));
     this.models.drawScore(context, program_state, this.z_bound, this.score.toString())
+
+    // draw lanes and obstacles
+    this.lanes.forEach((lane, i) => {
+      const highlight_lane = this.highlight && (i === current_lane || i === current_lane - 1);
+      lane.handle_obstacles(context, program_state, this.models, dt, highlight_lane);
+    })
+
     // chicken collisions
     const lane_end = (2 * this.lane_width) * ((this.chunks_rendered) * 10) + 6 * 2 * this.lane_width;
     const num_lanes = this.chunks_rendered === 1 ? 16 : 26;
-    const lane_start = lane_end - num_lanes * 2 * this.lane_width;
-    const current_lane = Math.ceil(this.chunks_rendered === 1 ? 1 : (z - lane_start) / (2 * this.lane_width))
+    const first_lane_z = lane_end - num_lanes * 2 * this.lane_width;
+    const current_lane_z = Math.ceil(this.chunks_rendered === 1 ? 1 : (z - first_lane_z) / (2 * this.lane_width))
     const chicken_x_rad = this.chicken_angle === 0 || this.chicken_angle === Math.PI ? 0.6 : 0.75;
     const chicken_z_rad = this.chicken_angle === 0 || this.chicken_angle === Math.PI ? 0.75 : 0.6;
-    for (let i = current_lane; i >= current_lane - 1; i--) {
+    // checks current 2 lanes
+    for (let i = current_lane_z; i >= current_lane_z - 1; i--) {
       const lane = this.lanes[i];
-      lane.obstacles.forEach((obs) => {
-        const min_x = chicken_x_rad + obs.radius;
-        const min_z = chicken_z_rad + obs.radius;
-        const obs_z_pos = lane_start + i * 2 * this.lane_width;
-        const x_dist = (obs.x_pos - x);
-        const z_dist = Math.abs(z - obs_z_pos);
-        if (z_dist < min_z && Math.abs(x_dist) < min_x) {
-          if (x_dist < 0) {
-            obs.direction = -1;
-            obs.transform[0][3] = x - min_x;
-          }
-          else {
-            obs.direction = 1;
-            obs.transform[0][3] = x + min_x;
-
-          }
-          obs.color = color(1, 0, 0, 1);
-        }
-      })
+      const lane_z = first_lane_z + i * 2 * this.lane_width;
+      lane.check_collision(x, z, chicken_x_rad, chicken_z_rad, lane_z);
     }
 
-    this.lanes.forEach((lane, i) => {
-      const highlight_lane = this.highlight && (i === current_lane || i === current_lane - 1);
-      lane.handleObstacles(context, program_state, this.models, dt, highlight_lane);
-    })
-
+    // generates new lanes and deletes old ones
     if (z > (this.chunks_rendered - 1) * 10 * 2 * this.lane_width + 2 * this.lane_width) {
       this.chunks_rendered++;
       this.lanes = this.lanes.slice(-16);
