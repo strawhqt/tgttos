@@ -42,8 +42,7 @@ export class Lane {
         if (z_dist < min_dist && x_dist > 0 && x_dist <= min_dist && obs1 !== obs2) {
           [obs1.speed, obs2.speed, obs1.direction, obs2.direction] =
             [obs2.speed, obs1.speed, obs2.direction, obs1.direction]
-          if (obs1.direction === obs2.direction)
-            obs1.transform[0][3] = obs2.transform[0][3] + min_dist; // force apart because buggy af otherwise
+          obs1.transform[0][3] = obs2.transform[0][3] + min_dist; // force apart because buggy af otherwise
           // alternate way of fixing wiggle bug, but sacrifices physics
           // obs1.direction = 1;
           // obs2.direction = -1;
@@ -67,7 +66,7 @@ export class Lane {
   }
 
   check_collision(x, z, x_rad, z_rad, lane_z) {
-    this.obstacles.forEach((obs) => {
+    for (let obs of this.obstacles) {
       const min_x = x_rad + obs.radius;
       const min_z = z_rad + obs.radius;
       const obs_z_pos = lane_z - obs.z_offset;
@@ -77,15 +76,16 @@ export class Lane {
         if (x_dist < 0) {
           obs.direction = -1;
           obs.transform[0][3] = x - min_x;
-        }
-        else {
+        } else {
           obs.direction = 1;
           obs.transform[0][3] = x + min_x;
 
         }
         obs.color = color(1, 0, 0, 1);
+        return true;
       }
-    })
+    }
+    return false;
   }
 }
 

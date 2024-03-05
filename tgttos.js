@@ -10,6 +10,10 @@ export class Tgttos extends Scene {
 
   constructor() {
     super();
+    this.init();
+  }
+
+  init() {
     this.moving_left = false;
     this.moving_right = false;
     this.moving_forward = false;
@@ -42,8 +46,9 @@ export class Tgttos extends Scene {
     this.chicken_height = 0;
     this.highlight = false;
     this.score = 0;
-  }
 
+    this.dead = false;
+  }
   make_control_panel() {
     // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
     this.key_triggered_button("Forward", ["w"], () => this.moving_forward = true, '#6E6460', () => this.moving_forward = false);
@@ -60,6 +65,10 @@ export class Tgttos extends Scene {
       }, 500)
     }, '#6E6460');
     this.key_triggered_button("highlight checked lanes", ["h"], () => this.highlight = !this.highlight, '#6E6460');
+    this.key_triggered_button("revive", ["e"], () => this.dead = false)
+    this.key_triggered_button("restart", ["r"], () => {
+      this.init();
+    })
   }
 
   /*
@@ -107,7 +116,9 @@ export class Tgttos extends Scene {
     const old_z = -this.default_chicken_transform[2][3]; // +z into the page
 
     // attaches movement controls to cube
-    this.default_chicken_transform = this.handle_movement(this.default_chicken_transform, this.moving_left, this.moving_right, this.moving_forward, this.moving_back, old_x, old_z, t, dt);
+    if (!this.dead) {
+      this.default_chicken_transform = this.handle_movement(this.default_chicken_transform, this.moving_left, this.moving_right, this.moving_forward, this.moving_back, old_x, old_z, t, dt);
+    }
     const x = this.default_chicken_transform[0][3]; // +x on the right
     const z = -this.default_chicken_transform[2][3]; // +z into the page
     this.z_bound = Math.max(this.z_bound, z - this.lane_width);
@@ -131,7 +142,7 @@ export class Tgttos extends Scene {
     const chicken_model_transform = this.default_chicken_transform
       .times(Mat4.rotation(this.chicken_angle, 0, 1, 0))
       .times(Mat4.translation(0, this.chicken_height, 0));
-    this.models.drawChicken(context, program_state, chicken_model_transform, this.moving, this.tweak_angle);
+    this.models.drawChicken(context, program_state, chicken_model_transform, this.dead, this.tweak_angle);
     this.models.drawBackground(context, program_state, this.default_chicken_transform);
     this.eggs.forEach((egg_model_transform) => {
       this.models.drawEgg(context, program_state, egg_model_transform);
@@ -146,6 +157,7 @@ export class Tgttos extends Scene {
     const num_lanes = this.chunks_rendered === 1 ? 16 : 26;
     const first_lane_z = lane_end - num_lanes * 2 * this.lane_width;
     const current_lane_z = Math.ceil(this.chunks_rendered === 1 ? 1 : (z - first_lane_z) / (2 * this.lane_width))
+
     this.lanes.forEach((lane, i) => {
       const highlight_lane = this.highlight && (i === current_lane_z || i === current_lane_z - 1);
       lane.handle_obstacles(context, program_state, this.models, dt, highlight_lane);
@@ -155,10 +167,15 @@ export class Tgttos extends Scene {
     const chicken_x_rad = this.chicken_angle === 0 || this.chicken_angle === Math.PI ? 0.6 : 0.75;
     const chicken_z_rad = this.chicken_angle === 0 || this.chicken_angle === Math.PI ? 0.75 : 0.6;
     // checks current 2 lanes
+    // if (this.lanes[1].check_collision(x, z, chicken_x_rad, chicken_z_rad, 1)) {
+    //   console.log('hi');
+    // }
     for (let i = current_lane_z; i >= current_lane_z - 1; i--) {
       const lane = this.lanes[i];
       const lane_z = first_lane_z + i * 2 * this.lane_width;
-      lane.check_collision(x, z, chicken_x_rad, chicken_z_rad, lane_z);
+      if (lane.check_collision(x, z, chicken_x_rad, chicken_z_rad, lane_z)) {
+        this.dead = true;
+      }
     }
 
     // generates new lanes and deletes old ones
