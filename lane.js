@@ -1,5 +1,5 @@
 import {defs, tiny} from './examples/common.js';
-import {Models} from './models.js';
+import * as models from './models.js';
 
 const {
   Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene,
@@ -53,7 +53,7 @@ export class Lane {
     })
   }
 
-  handle_obstacles(context, program_state, models, dt, highlighted = false) {
+  handle_obstacles(context, program_state, dt, highlighted = false) {
     this.obstacles.forEach((obstacle) => {
       obstacle.handle_position(dt);
       models.drawObstacle(context, program_state, obstacle.transform, obstacle.color)

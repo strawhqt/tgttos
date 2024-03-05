@@ -1,5 +1,5 @@
 import {defs, tiny} from './examples/common.js';
-import {Models} from './models.js';
+import * as models from './models.js';
 import {Lane} from "./lane.js";
 
 const {
@@ -7,7 +7,6 @@ const {
 } = tiny;
 
 export class Tgttos extends Scene {
-
   constructor() {
     super();
     this.init();
@@ -24,7 +23,6 @@ export class Tgttos extends Scene {
     this.camera_z_bound = -100;
     this.lane_width = 5; // how wide each lane is (in terms of z)
     this.chunks_rendered = 1;
-    this.models = new Models();
     this.default_chicken_transform = Mat4.identity();
     this.chicken_angle = 0;
     this.lane_transform = Mat4.identity().times(Mat4.scale(this.x_bound, 1, this.lane_width))
@@ -142,15 +140,15 @@ export class Tgttos extends Scene {
     const chicken_model_transform = this.default_chicken_transform
       .times(Mat4.rotation(this.chicken_angle, 0, 1, 0))
       .times(Mat4.translation(0, this.chicken_height, 0));
-    this.models.drawChicken(context, program_state, chicken_model_transform, this.dead, this.tweak_angle);
-    this.models.drawBackground(context, program_state, this.default_chicken_transform);
+    models.drawChicken(context, program_state, chicken_model_transform, this.dead, this.tweak_angle);
+    models.drawBackground(context, program_state, this.default_chicken_transform);
     this.eggs.forEach((egg_model_transform) => {
-      this.models.drawEgg(context, program_state, egg_model_transform);
+      models.drawEgg(context, program_state, egg_model_transform);
     })
 
     // score
     this.score = Math.max(this.score, Math.floor(z / (2 * this.lane_width)));
-    this.models.drawScore(context, program_state, this.z_bound, this.score.toString())
+    models.drawScore(context, program_state, this.z_bound, this.score.toString())
 
     // draw lanes and obstacles
     const lane_end = (2 * this.lane_width) * ((this.chunks_rendered) * 10) + 6 * 2 * this.lane_width;
@@ -160,7 +158,7 @@ export class Tgttos extends Scene {
 
     this.lanes.forEach((lane, i) => {
       const highlight_lane = this.highlight && (i === current_lane_z || i === current_lane_z - 1);
-      lane.handle_obstacles(context, program_state, this.models, dt, highlight_lane);
+      lane.handle_obstacles(context, program_state, dt, highlight_lane);
     })
 
     // chicken collisions
