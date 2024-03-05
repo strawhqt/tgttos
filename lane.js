@@ -9,21 +9,26 @@ export class Lane {
   constructor(model_transform, color, lane_x_width, no_obstacles = false) {
     this.lane_transform = model_transform;
     this.color = color;
-    this.obstacle_count = no_obstacles ? 0 : Math.floor(Math.random() * 4);
+    this.obstacle_count = no_obstacles ? 0 : Math.floor(Math.random() * 3);
     this.obstacles = [];
 
     for (let i = 0; i < this.obstacle_count; i++) {
       let overlap = false;
       let start_offset = 0;
+      const obs_rad = 1;
+      const z_offset = 0;
       do {
         overlap = false;
         start_offset = Math.random() * 2 * lane_x_width - lane_x_width
         this.obstacles.forEach((obs) => {
-          if (Math.abs(start_offset - obs.x_pos) < 2) // 2 from radius of 1
+          const x_dist = Math.abs(start_offset - obs.x_pos);
+          const z_dist = Math.abs(z_offset - obs.z_offset);
+          const min_dist = obs_rad + obs.radius;
+          if (x_dist < min_dist && z_dist < min_dist)
             overlap = true;
         })
       } while (overlap)
-      this.obstacles.push(new MovingObstacle(model_transform, lane_x_width, 1, start_offset));
+      this.obstacles.push(new MovingObstacle(model_transform, lane_x_width, obs_rad, start_offset, z_offset));
     }
   }
 
@@ -31,9 +36,10 @@ export class Lane {
     if (this.obstacle_count <= 1) return;
     this.obstacles.forEach((obs1) => {
       this.obstacles.forEach((obs2) => {
-        const dist = obs1.x_pos - obs2.x_pos;
+        const x_dist = obs1.x_pos - obs2.x_pos;
+        const z_dist = Math.abs(obs1.z_offset - obs2.z_offset);
         const min_dist = obs1.radius + obs2.radius;
-        if (dist > 0 && dist <= min_dist && obs1 !== obs2) {
+        if (z_dist < min_dist && x_dist > 0 && x_dist <= min_dist && obs1 !== obs2) {
           [obs1.speed, obs2.speed, obs1.direction, obs2.direction] =
             [obs2.speed, obs1.speed, obs2.direction, obs1.direction]
           if (obs1.direction === obs2.direction)
@@ -41,7 +47,7 @@ export class Lane {
           // alternate way of fixing wiggle bug, but sacrifices physics
           // obs1.direction = 1;
           // obs2.direction = -1;
-          if (dist <= min_dist / 2)
+          if (x_dist <= min_dist / 2)
             console.log('should not be happening (too often)')
         }
       })
@@ -64,7 +70,7 @@ export class Lane {
     this.obstacles.forEach((obs) => {
       const min_x = x_rad + obs.radius;
       const min_z = z_rad + obs.radius;
-      const obs_z_pos = lane_z;
+      const obs_z_pos = lane_z - obs.z_offset;
       const x_dist = (obs.x_pos - x);
       const z_dist = Math.abs(z - obs_z_pos);
       if (z_dist < min_z && Math.abs(x_dist) < min_x) {
@@ -83,19 +89,21 @@ export class Lane {
   }
 }
 
+
 class MovingObstacle {
-  constructor(model_transform, x_bound, radius, start_offset) {
+  constructor(model_transform, x_bound, radius, start_offset, z_offset= 0) {
     this.x_bound = x_bound
     this.radius = radius
     this.start_offset = start_offset;
     this.x_pos = this.start_offset;
-    this.transform = Mat4.identity().times(Mat4.translation(this.start_offset, 0, model_transform[2][3]));
+    this.transform = Mat4.identity().times(Mat4.translation(this.start_offset, 0, model_transform[2][3] + z_offset));
     this.speed = Math.random() * (50 - 10) + 10;
     this.direction = Math.round(Math.random()) ? 1 : -1
     const r = Math.random() * 127 + 127;
     const g = Math.random() * 127 + 127;
     const b = Math.random() * 127 + 127;
     this.color = color(r / 255, g / 255, b / 255, 1);
+    this.z_offset = z_offset;
     // this.left_x = this.start_offset - radius
     // this.right_x = this.start_offset + radius
 

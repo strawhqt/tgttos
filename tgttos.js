@@ -142,16 +142,16 @@ export class Tgttos extends Scene {
     this.models.drawScore(context, program_state, this.z_bound, this.score.toString())
 
     // draw lanes and obstacles
-    this.lanes.forEach((lane, i) => {
-      const highlight_lane = this.highlight && (i === current_lane || i === current_lane - 1);
-      lane.handle_obstacles(context, program_state, this.models, dt, highlight_lane);
-    })
-
-    // chicken collisions
     const lane_end = (2 * this.lane_width) * ((this.chunks_rendered) * 10) + 6 * 2 * this.lane_width;
     const num_lanes = this.chunks_rendered === 1 ? 16 : 26;
     const first_lane_z = lane_end - num_lanes * 2 * this.lane_width;
     const current_lane_z = Math.ceil(this.chunks_rendered === 1 ? 1 : (z - first_lane_z) / (2 * this.lane_width))
+    this.lanes.forEach((lane, i) => {
+      const highlight_lane = this.highlight && (i === current_lane_z || i === current_lane_z - 1);
+      lane.handle_obstacles(context, program_state, this.models, dt, highlight_lane);
+    })
+
+    // chicken collisions
     const chicken_x_rad = this.chicken_angle === 0 || this.chicken_angle === Math.PI ? 0.6 : 0.75;
     const chicken_z_rad = this.chicken_angle === 0 || this.chicken_angle === Math.PI ? 0.75 : 0.6;
     // checks current 2 lanes
