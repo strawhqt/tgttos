@@ -2,6 +2,7 @@ import {defs, tiny} from './examples/common.js';
 import * as models from './models.js';
 import {Lane} from "./lane.js";
 import {Chicken} from "./chicken.js";
+import {Score} from "./text-canvas.js";
 
 const {
   Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene,
@@ -24,6 +25,7 @@ export class Tgttos extends Scene {
       .times(Mat4.translation(0, -2, 0));
     this.lane_colors = [hex_color('#b2e644'), hex_color('#699e1c')]
     this.lanes = []
+    this.score_canvas = new Score();
 
     // special first lane
     this.lanes.push(new Lane(this.lane_transform, this.lane_colors[0], this.x_bound, true));
@@ -35,6 +37,7 @@ export class Tgttos extends Scene {
     this.highlight = false;
     this.score = 0;
   }
+
   make_control_panel() {
     // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
     this.key_triggered_button("Forward", ["w"], () => this.chicken.moving_forward = true, '#6E6460', () => this.chicken.moving_forward = false);
@@ -92,14 +95,18 @@ export class Tgttos extends Scene {
 
     // main character
     this.chicken.draw(context, program_state);
-    models.drawBackground(context, program_state, this.chicken.transform);
+    // models.drawBackground(context, program_state, this.chicken.transform);
     this.chicken.eggs.forEach((egg_model_transform) => {
       models.drawEgg(context, program_state, egg_model_transform);
     })
 
     // score
     this.score = Math.max(this.score, Math.floor(z / (2 * this.lane_width)));
-    models.drawScore(context, program_state, this.chicken.z_bound, this.score.toString())
+    this.score_canvas.drawScore(this.score);
+    if (x === 0 && z === 0)
+      this.score_canvas.drawToast("WASD to move!", t);
+
+    // models.drawScore(context, program_state, this.chicken.z_bound, this.score.toString())
 
 
     // handle and draw lanes and obstacles

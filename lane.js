@@ -103,17 +103,23 @@ class Obstacle {
     this.color = color(r / 255, g / 255, b / 255, 1);
     this.z_offset = z_offset;
   }
-  handle_position(dt) {}
 
-  on_obstacle_collision(other_x, other_z, other_speed, other_dir) {}
+  handle_position(dt) {
+  }
 
-  on_bound_collision() {}
+  on_obstacle_collision(other_x, other_z, other_speed, other_dir) {
+  }
 
-  on_chicken_collision(chicken, x_dist) {}
+  on_bound_collision() {
+  }
+
+  on_chicken_collision(chicken, x_dist) {
+  }
 
 }
+
 class MovingObstacle extends Obstacle {
-  constructor(model_transform, x_bound, x_radius, z_radius, start_offset, z_offset= 0) {
+  constructor(model_transform, x_bound, x_radius, z_radius, start_offset, z_offset = 0) {
     super(model_transform, x_bound, x_radius, z_radius, start_offset, z_offset)
     this.speed = Math.random() * (50 - 10) + 10;
     this.direction = Math.round(Math.random()) ? 1 : -1

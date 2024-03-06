@@ -1,5 +1,6 @@
 import {defs, tiny} from './examples/common.js';
 import {Text_Line} from "./examples/text-demo.js";
+
 const {
   Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene, Texture,
 } = tiny;
@@ -26,16 +27,18 @@ const materials = {
     {ambient: 0.8, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
   text_image: new Material(new defs.Textured_Phong(1), {
     ambient: 1, diffusivity: 0, specularity: 0,
-    texture: new Texture("assets/text.png")}),
+    texture: new Texture("assets/text.png")
+  }),
 }
 
 
 function backAndForth(model_transform, x, y, z) {
   return Mat4.translation(-x, -y, -z).times(model_transform).times(Mat4.translation(x, y, z));
 }
+
 export function drawChicken(context, program_state, model_transform, dead, wing_angle) {
 
-  const dead_transform = dead ? Mat4.rotation(Math.PI / 2, 0, 0,  1) : Mat4.identity();
+  const dead_transform = dead ? Mat4.rotation(Math.PI / 2, 0, 0, 1) : Mat4.identity();
   if (dead) wing_angle = 0;
 
   const body_transform = backAndForth(Mat4.scale(0.6, 0.6, 0.75), 0, 1, 0).times(dead_transform);
@@ -108,11 +111,11 @@ export function drawEgg(context, program_state, model_transform) {
   shapes.egg.draw(context, program_state, egg_model, materials.egg);
 }
 
-export function drawScore(context, program_state, z, score) {
-  const text_model_transform = Mat4.translation(0, 0, -z)
-    .times(Mat4.translation(-14, 15.5, 0))
-    .times(Mat4.rotation(-Math.PI / 6.5, 1, 0, 0))
-  ;
-  shapes.text.set_string(score, context.context);
-  shapes.text.draw(context, program_state, text_model_transform, materials.text_image);
-}
+// export function drawScore(context, program_state, z, score) {
+//   const text_model_transform = Mat4.translation(0, 0, -z)
+//     .times(Mat4.translation(-14, 15.5, 0))
+//     .times(Mat4.rotation(-Math.PI / 6.5, 1, 0, 0))
+//   ;
+//   shapes.text.set_string(score, context.context);
+//   shapes.text.draw(context, program_state, text_model_transform, materials.text_image);
+// }

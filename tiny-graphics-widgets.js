@@ -6,7 +6,7 @@
 import {tiny} from './tiny-graphics.js';
 
 // Pull these names into this module's scope for convenience.
-const {color, Scene} = tiny;
+const {color, Scene, hex_color} = tiny;
 
 export const widgets = {};
 
@@ -41,7 +41,6 @@ const Canvas_Widget = widgets.Canvas_Widget =
             }
 
             const canvas = this.element.appendChild(document.createElement("canvas"));
-
             if (this.make_controls) {
                 this.embedded_controls_area = this.element.appendChild(document.createElement("div"));
                 this.embedded_controls_area.className = "controls-widget";
@@ -60,7 +59,7 @@ const Canvas_Widget = widgets.Canvas_Widget =
             if (!this.show_canvas)
                 canvas.style.display = "none";
 
-            this.webgl_manager = new tiny.Webgl_Manager(canvas, color(0, 0, 0, 1));
+            this.webgl_manager = new tiny.Webgl_Manager(canvas, hex_color("#009dc4"));
             // Second parameter sets background color.
 
 
