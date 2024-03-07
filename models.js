@@ -182,6 +182,10 @@ export function drawEgg(context, program_state, model_transform) {
   shapes.egg.draw(context, program_state, egg_model, materials.egg);
 }
 
+export function drawTree(context, program_state, model_transform) {
+  shapes.cube.draw(context, program_state, model_transform, materials.cube);
+}
+
 // export function drawScore(context, program_state, z, score) {
 //   const text_model_transform = Mat4.translation(0, 0, -z)
 //     .times(Mat4.translation(-14, 15.5, 0))

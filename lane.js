@@ -1,6 +1,6 @@
 import {defs, tiny} from './examples/common.js';
 import * as models from './models.js';
-import {Obstacle, MovingObstacle, Car} from "./obstacle.js";
+import {Obstacle, MovingObstacle, Car, StationaryObstacle} from "./obstacle.js";
 
 const {
   Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene,
@@ -11,12 +11,19 @@ export class Lane {
     this.lane_transform = model_transform;
     this.lane_z = -this.lane_transform[2][3];
     this.color = color;
+    this.x_bound = lane_x_width;
+
+    this.obstacles = []
+    this.obstacle_count = Math.floor(Math.random() * 3);
+    this.obstacle_init();
+  }
+
+  obstacle_init() {
   }
 
   draw(context, program_state, highlighted) {
     let lane_color = this.color;
-    if (highlighted)
-      lane_color = hex_color('#ffd400');
+    if (highlighted) lane_color = hex_color('#ffd400');
     models.drawLane(context, program_state, this.lane_transform, lane_color);
     this.draw_obstacles(context, program_state);
   }
@@ -37,18 +44,18 @@ export class Road extends Lane {
   constructor(model_transform, color = hex_color("#525866"), lane_x_width) {
     super(model_transform, color, lane_x_width);
 
-    this.obstacle_count = Math.floor(Math.random() * 3);
-    this.obstacles = [];
+  }
 
+  obstacle_init() {
     for (let i = 0; i < this.obstacle_count; i++) {
       let overlap = false;
       let start_offset = 0;
-      const obs_x_rad = 1;
-      const obs_z_rad = 1;
+      const obs_x_rad = 3; // need to change depending on obstacle
+      const obs_z_rad = 2; // need to change depending on obstacle
       const z_offset = 0;
       do {
         overlap = false;
-        const spawn_width = lane_x_width - obs_x_rad;
+        const spawn_width = this.x_bound - obs_x_rad;
         start_offset = Math.random() * 2 * spawn_width - spawn_width;
         this.obstacles.forEach((obs) => {
           const x_dist = Math.abs(start_offset - obs.x_pos);
@@ -59,7 +66,7 @@ export class Road extends Lane {
             overlap = true;
         })
       } while (overlap)
-      this.obstacles.push(new Car(model_transform, lane_x_width, start_offset, z_offset));
+      this.obstacles.push(new Car(this.lane_transform, this.x_bound, start_offset, z_offset));
     }
   }
 
@@ -108,11 +115,11 @@ export class Road extends Lane {
   draw_obstacles(context, program_state) {
     this.obstacles.forEach((obs) => {
       // everything that changes obstacle position modifies x_pos
-      // so we apply that to the transform here
+      // we apply that to the transform here
       obs.transform[0][3] = obs.x_pos;
-      obs.orientation = obs.direction === 1 ? 0 : Math.PI;
+      const orientation = obs.direction === 1 ? 0 : Math.PI;
       if (obs instanceof Car) {
-        models.drawCar(context, program_state, obs.transform.times(Mat4.rotation(obs.orientation, 0, 1, 0)), obs.color[0], obs.color[1]);
+        models.drawCar(context, program_state, obs.transform.times(Mat4.rotation(orientation, 0, 1, 0)), obs.color[0], obs.color[1]);
       }
     })
   }
@@ -123,7 +130,36 @@ export class Road extends Lane {
 export class RestLane extends Lane {
   constructor(model_transform, color, lane_width) {
     super(model_transform, color, lane_width);
-
   }
 
+  obstacle_init() {
+    for (let i = 0; i < this.obstacle_count; i++) {
+      let overlap = false;
+      let start_offset = 0;
+      const obs_x_rad = 1; // need to change depending on obstacle
+      const obs_z_rad = 1; // need to change depending on obstacle
+      const z_offset = 0;
+      do {
+        overlap = false;
+        const spawn_width = this.x_bound - obs_x_rad;
+        start_offset = Math.random() * 2 * spawn_width - spawn_width;
+        this.obstacles.forEach((obs) => {
+          const x_dist = Math.abs(start_offset - obs.x_pos);
+          const z_dist = Math.abs(z_offset - obs.z_offset);
+          const min_x_dist = obs_x_rad + obs.x_radius;
+          const min_z_dist = obs_z_rad + obs.z_radius;
+          if (x_dist < min_x_dist && z_dist < min_z_dist)
+            overlap = true;
+        })
+      } while (overlap)
+      console.log(start_offset);
+      this.obstacles.push(new StationaryObstacle(this.lane_transform, this.x_bound, start_offset, z_offset));
+    }
+  }
+
+  draw_obstacles(context, program_state) {
+    this.obstacles.forEach((obs) => {
+      models.drawTree(context, program_state, obs.transform);
+    })
+  }
 }
