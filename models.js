@@ -163,29 +163,38 @@ export function drawCar(context, program_state, model_transform, color1 = hex_co
   shapes.cube.draw(context, program_state, model_transform.times(wheel_back_left_aux_transform), materials.plastic.override({color: hex_color("#ffffff")}));
 }
 
-let logged = false;
-export function drawLane(context, program_state, lane_type, x_bound, z_depth, model_transform, color) {
+export function drawLane(context, program_state, lane_type, x_bound, z_depth, model_transform, color, before_rest_lane) {
   if (lane_type instanceof Road) {
-    const lane_divider_separator = 7;
-    // if (!logged) console.log(Mat4.translation(0, 0, -model_transform[2][3]).times(model_transform))
-    // logged = true;
-    let lane_divider_transform = Mat4.identity()
-      .times(Mat4.translation(-x_bound + lane_divider_separator, 0, -z_depth))
-      .times(Mat4.translation(0, 0, model_transform[2][3]))
-      .times(Mat4.scale(0.1, 0.995, 0.1))
-      .times(Mat4.translation(0, 0, -model_transform[2][3]))
-      .times(model_transform)
-    // if(!logged) console.log(lane_divider_transform);
-    // logged = true;
-    for (let i = -x_bound; i < x_bound - lane_divider_separator; i += lane_divider_separator) {
-      shapes.cube.draw(context, program_state, lane_divider_transform, materials.ground.override(({color: hex_color("#7d8498")})));
-      lane_divider_transform = Mat4.translation(lane_divider_separator, 0, 0).times(lane_divider_transform);
+    // only add dividers if it isn't before a rest lane
+    if (!before_rest_lane) {
+      const lane_divider_separator = 5; // how far apart each divider is
+      const lane_divider_length = 2; // how wide each lane divider is
+      let first_lane_divider = true;
+      let lane_divider_transform = Mat4.identity()
+        .times(Mat4.translation(-x_bound + lane_divider_length / 2, 0, -z_depth))
+        .times(Mat4.translation(0, 0, model_transform[2][3]))
+        .times(Mat4.scale(lane_divider_length / x_bound / 2, 0.995, 0.1)) // print half a divider at a time
+        .times(Mat4.translation(0, 0, -model_transform[2][3]))
+        .times(model_transform)
+
+      for (let i = -x_bound; i + lane_divider_length < x_bound; i += lane_divider_separator + lane_divider_length) {
+        // if first lane divider, we only draw half
+        if (first_lane_divider) {
+          shapes.cube.draw(context, program_state, lane_divider_transform, materials.ground.override(({color: hex_color("#7d8498")})));
+          first_lane_divider = false;
+        }
+        else {
+          shapes.cube.draw(context, program_state, lane_divider_transform, materials.ground.override(({color: hex_color("#7d8498")})));
+          lane_divider_transform = Mat4.translation(lane_divider_length, 0, 0).times(lane_divider_transform);
+          shapes.cube.draw(context, program_state, lane_divider_transform, materials.ground.override(({color: hex_color("#7d8498")})));
+        }
+        lane_divider_transform = Mat4.translation(lane_divider_separator, 0, 0).times(lane_divider_transform);
+      }
     }
-    shapes.cube.draw(context, program_state, model_transform, materials.ground.override({color: hex_color("#525866")}))
+    // draw the actual road
+    shapes.cube.draw(context, program_state, model_transform, materials.ground.override({color: color}))
   }
   else {
-    if (!logged) console.log(model_transform.times(Mat4.scale(1, 1.001, 1)));
-    logged = true;
     shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0.01, 0)), materials.ground.override({color: color}));
   }
 }

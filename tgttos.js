@@ -31,10 +31,11 @@ export class Tgttos extends Scene {
     this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     for (let i = 1; i < 16; i++) {
       if (Math.random() < 0.3) {
+        this.lanes.at(-1).before_rest_lane = true;
         this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth));
       }
       else {
-        this.lanes.push(new Road(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth));
+        this.lanes.push(new Road(this.lane_transform, this.x_bound, this.lane_depth));
       }
       this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     }
@@ -133,12 +134,14 @@ export class Tgttos extends Scene {
     if (z > (this.chunks_rendered - 1) * 10 * 2 * this.lane_depth + 2 * this.lane_depth) {
       this.chunks_rendered++;
       this.lanes = this.lanes.slice(-16);
+      console.log(this.lanes);
       for (let i = 0; i < 10; i++) {
         if (Math.random() < 0.3) {
+          if (this.lanes.length > 1) this.lanes.at(-1).before_rest_lane = true;
           this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth));
         }
         else {
-          this.lanes.push(new Road(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth));
+          this.lanes.push(new Road(this.lane_transform, this.x_bound, this.lane_depth));
         }
         this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
       }
