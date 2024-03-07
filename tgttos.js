@@ -1,6 +1,6 @@
 import {defs, tiny} from './examples/common.js';
 import * as models from './models.js';
-import {Lane} from "./lane.js";
+import {Lane, Road, RestLane} from "./lane.js";
 import {Chicken} from "./chicken.js";
 import {Score} from "./text-canvas.js";
 
@@ -28,10 +28,10 @@ export class Tgttos extends Scene {
     this.score_canvas = new Score();
 
     // special first lane
-    this.lanes.push(new Lane(this.lane_transform, this.lane_colors[0], this.x_bound, true));
+    this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound));
     this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     for (let i = 1; i < 16; i++) {
-      this.lanes.push(new Lane(this.lane_transform, this.lane_colors[i % 2], this.x_bound));
+      this.lanes.push(new Road(this.lane_transform, this.lane_colors[i % 2], this.x_bound));
       this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     }
     this.highlight = false;
@@ -130,7 +130,7 @@ export class Tgttos extends Scene {
       this.chunks_rendered++;
       this.lanes = this.lanes.slice(-16);
       for (let i = 0; i < 10; i++) {
-        this.lanes.push(new Lane(this.lane_transform, this.lane_colors[i % 2], this.x_bound));
+        this.lanes.push(new Road(this.lane_transform, this.lane_colors[i % 2], this.x_bound));
         this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
       }
     }

@@ -82,7 +82,7 @@ export function drawChicken(context, program_state, model_transform, dead, wing_
   shapes.cube.draw(context, program_state, model_transform.times(wattle_transform), materials.cube.override({color: vec4(1, 0, 0, 1)}));
 }
 
-export function drawObstacle(context, program_state, model_transform, color) {
+export function drawCar(context, program_state, model_transform, color1 = hex_color("#ffffff"), color2 = hex_color("#ffffff")) {
   let height = 0.4; // height of the middle portion
   let length = 3;
   let width = 2;
@@ -124,7 +124,7 @@ export function drawObstacle(context, program_state, model_transform, color) {
     .times(upper_body_transform)
     .times(Mat4.scale(1.001, 0.7, 0.8));
 
-  const mirror_transform = Mat4.translation(0.03 * length,0.3 * height,0)
+  const mirror_transform = Mat4.translation(0.05 * length,0.3 * height,0)
     .times(body_transform)
     .times(Mat4.scale(0.15, 0.6, 1.2));
 
@@ -140,15 +140,15 @@ export function drawObstacle(context, program_state, model_transform, color) {
   const wheel_back_left_transform = Mat4.translation(-0.5 * length, -height * 2.5, -0.7 * width).times(wheel_transform);
   const wheel_back_left_aux_transform = wheel_back_left_transform.times(Mat4.scale(0.33, 0.33, 1.01));
 
-  shapes.cube.draw(context, program_state, model_transform.times(body_transform), materials.plastic.override({color: hex_color("#fd6e30")}));
-  shapes.cube.draw(context, program_state, model_transform.times(middle_body_transform), materials.plastic.override({color: hex_color("#ff4c2b")}));
+  shapes.cube.draw(context, program_state, model_transform.times(body_transform), materials.plastic.override({color: color1}));
+  shapes.cube.draw(context, program_state, model_transform.times(middle_body_transform), materials.plastic.override({color: color2}));
   shapes.cube.draw(context, program_state, model_transform.times(light_transform_right), materials.plastic.override({color: hex_color("#ffffff")}));
   shapes.cube.draw(context, program_state, model_transform.times(light_transform_left), materials.plastic.override({color: hex_color("#ffffff")}));
-  shapes.cube.draw(context, program_state, model_transform.times(lower_body_1), materials.plastic.override({color: hex_color("#ff4c2b")}));
+  shapes.cube.draw(context, program_state, model_transform.times(lower_body_1), materials.plastic.override({color: color2}));
   shapes.cube.draw(context, program_state, model_transform.times(lower_body_2_left), materials.plastic.override({color: hex_color("#645a8b")}));
   shapes.cube.draw(context, program_state, model_transform.times(lower_body_2_right), materials.plastic.override({color: hex_color("#645a8b")}));
   shapes.cube.draw(context, program_state, model_transform.times(upper_body_transform), materials.plastic.override({color: hex_color("#ffffff")}));
-  shapes.cube.draw(context, program_state, model_transform.times(mirror_transform), materials.plastic.override({color: hex_color("#ff4c2b")}));
+  shapes.cube.draw(context, program_state, model_transform.times(mirror_transform), materials.plastic.override({color: color2}));
   shapes.cube.draw(context, program_state, model_transform.times(side_window_transform), materials.plastic.override({color: hex_color("#000000")}));
   shapes.cube.draw(context, program_state, model_transform.times(front_back_window_transform), materials.plastic.override({color: hex_color("#000000")}));
   shapes.cube.draw(context, program_state, model_transform.times(wheel_front_right_transform), materials.plastic.override({color: hex_color("#000000")}));
