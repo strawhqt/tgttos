@@ -1,5 +1,6 @@
 import {defs, tiny} from './examples/common.js';
 import {Text_Line} from "./examples/text-demo.js";
+import {Road} from "./lane.js";
 
 const {
   Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene, Texture,
@@ -146,8 +147,8 @@ export function drawCar(context, program_state, model_transform, color1 = hex_co
   shapes.cube.draw(context, program_state, model_transform.times(light_transform_right), materials.plastic.override({color: hex_color("#ffffff")}));
   shapes.cube.draw(context, program_state, model_transform.times(light_transform_left), materials.plastic.override({color: hex_color("#ffffff")}));
   shapes.cube.draw(context, program_state, model_transform.times(lower_body_1), materials.plastic.override({color: color2}));
-  shapes.cube.draw(context, program_state, model_transform.times(lower_body_2_left), materials.plastic.override({color: hex_color("#645a8b")}));
-  shapes.cube.draw(context, program_state, model_transform.times(lower_body_2_right), materials.plastic.override({color: hex_color("#645a8b")}));
+  shapes.cube.draw(context, program_state, model_transform.times(lower_body_2_left), materials.plastic.override({color: hex_color("#3b3e3f")}));
+  shapes.cube.draw(context, program_state, model_transform.times(lower_body_2_right), materials.plastic.override({color: hex_color("#3b3e3f")}));
   shapes.cube.draw(context, program_state, model_transform.times(upper_body_transform), materials.plastic.override({color: hex_color("#ffffff")}));
   shapes.cube.draw(context, program_state, model_transform.times(mirror_transform), materials.plastic.override({color: color2}));
   shapes.cube.draw(context, program_state, model_transform.times(side_window_transform), materials.plastic.override({color: hex_color("#000000")}));
@@ -162,10 +163,31 @@ export function drawCar(context, program_state, model_transform, color1 = hex_co
   shapes.cube.draw(context, program_state, model_transform.times(wheel_back_left_aux_transform), materials.plastic.override({color: hex_color("#ffffff")}));
 }
 
-export function drawLane(context, program_state, model_transform, color) {
-  // shapes.score.set_string("sadaf", context);
-  // shapes.score.draw(context, program_state, model_transform, materials.text_image);
-  shapes.cube.draw(context, program_state, model_transform, materials.ground.override({color: color}));
+let logged = false;
+export function drawLane(context, program_state, lane_type, x_bound, z_depth, model_transform, color) {
+  if (lane_type instanceof Road) {
+    const lane_divider_separator = 7;
+    // if (!logged) console.log(Mat4.translation(0, 0, -model_transform[2][3]).times(model_transform))
+    // logged = true;
+    let lane_divider_transform = Mat4.identity()
+      .times(Mat4.translation(-x_bound + lane_divider_separator, 0, -z_depth))
+      .times(Mat4.translation(0, 0, model_transform[2][3]))
+      .times(Mat4.scale(0.1, 0.995, 0.1))
+      .times(Mat4.translation(0, 0, -model_transform[2][3]))
+      .times(model_transform)
+    // if(!logged) console.log(lane_divider_transform);
+    // logged = true;
+    for (let i = -x_bound; i < x_bound - lane_divider_separator; i += lane_divider_separator) {
+      shapes.cube.draw(context, program_state, lane_divider_transform, materials.ground.override(({color: hex_color("#7d8498")})));
+      lane_divider_transform = Mat4.translation(lane_divider_separator, 0, 0).times(lane_divider_transform);
+    }
+    shapes.cube.draw(context, program_state, model_transform, materials.ground.override({color: hex_color("#525866")}))
+  }
+  else {
+    if (!logged) console.log(model_transform.times(Mat4.scale(1, 1.001, 1)));
+    logged = true;
+    shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0.01, 0)), materials.ground.override({color: color}));
+  }
 }
 
 export function drawObstacle(context, program_state, model_transform, color) {

@@ -20,18 +20,22 @@ export class Tgttos extends Scene {
     this.z_bound = -100;
     this.chicken = new Chicken(20, -100);
     this.camera_z_bound = -100;
-    this.lane_width = 5; // how wide each lane is (in terms of z)
+    this.lane_depth = 5; // how wide each lane is (in terms of z)
     this.chunks_rendered = 1;
-    this.lane_transform = Mat4.identity().times(Mat4.scale(this.x_bound, 1, this.lane_width))
+    this.lane_transform = Mat4.identity().times(Mat4.scale(this.x_bound, 1, this.lane_depth))
       .times(Mat4.translation(0, -2, 0));
     this.lane_colors = [hex_color('#b2e644'), hex_color('#699e1c')]
     this.lanes = []
 
-    // special first lane
-    this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound));
+    this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound, this.lane_depth)); // first lane
     this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     for (let i = 1; i < 16; i++) {
-      this.lanes.push(new Road(this.lane_transform, this.lane_colors[i % 2], this.x_bound));
+      if (Math.random() < 0.3) {
+        this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth));
+      }
+      else {
+        this.lanes.push(new Road(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth));
+      }
       this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     }
     this.highlight = false;
@@ -77,7 +81,7 @@ export class Tgttos extends Scene {
     // position of the chicken
     const x = this.chicken.transform[0][3]; // +x on the right
     const z = -this.chicken.transform[2][3]; // +z into the page
-    this.chicken.z_bound = Math.max(this.chicken.z_bound, z - this.lane_width);
+    this.chicken.z_bound = Math.max(this.chicken.z_bound, z - this.lane_depth);
     this.camera_z_bound = Math.max(this.camera_z_bound, z);
 
     // attaches camera to cube
@@ -102,7 +106,7 @@ export class Tgttos extends Scene {
     })
 
     // score
-    this.score = Math.max(this.score, Math.floor(z / (2 * this.lane_width)));
+    this.score = Math.max(this.score, Math.floor(z / (2 * this.lane_depth)));
 
 
     const draw_toast = x === 0 && z === 0;
@@ -115,7 +119,7 @@ export class Tgttos extends Scene {
 
     // handle and draw lanes and obstacles
     const current_chicken_lane_index =
-      Math.ceil(this.chunks_rendered === 1 ? 1 : (z - this.lanes[0].lane_z) / (2 * this.lane_width))
+      Math.ceil(this.chunks_rendered === 1 ? 1 : (z - this.lanes[0].lane_z) / (2 * this.lane_depth))
     this.lanes.forEach((lane, i) => {
       const highlight_lane = this.highlight && (i === current_chicken_lane_index || i === current_chicken_lane_index - 1);
       const check_chicken =
@@ -126,11 +130,16 @@ export class Tgttos extends Scene {
     })
 
     // generates new lanes and deletes old ones
-    if (z > (this.chunks_rendered - 1) * 10 * 2 * this.lane_width + 2 * this.lane_width) {
+    if (z > (this.chunks_rendered - 1) * 10 * 2 * this.lane_depth + 2 * this.lane_depth) {
       this.chunks_rendered++;
       this.lanes = this.lanes.slice(-16);
       for (let i = 0; i < 10; i++) {
-        this.lanes.push(new Road(this.lane_transform, this.lane_colors[i % 2], this.x_bound));
+        if (Math.random() < 0.3) {
+          this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth));
+        }
+        else {
+          this.lanes.push(new Road(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth));
+        }
         this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
       }
     }

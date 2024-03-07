@@ -7,11 +7,12 @@ const {
 } = tiny;
 
 export class Lane {
-  constructor(model_transform, color, lane_x_width, no_obstacles = false) {
+  constructor(model_transform, color, lane_x_width, lane_depth, no_obstacles = false) {
     this.lane_transform = model_transform;
     this.lane_z = -this.lane_transform[2][3];
     this.color = color;
     this.x_bound = lane_x_width;
+    this.z_depth = lane_depth;
 
     this.obstacles = []
     this.obstacle_count = Math.floor(Math.random() * 3);
@@ -24,7 +25,7 @@ export class Lane {
   draw(context, program_state, highlighted) {
     let lane_color = this.color;
     if (highlighted) lane_color = hex_color('#ffd400');
-    models.drawLane(context, program_state, this.lane_transform, lane_color);
+    models.drawLane(context, program_state, this, this.x_bound, this.z_depth, this.lane_transform, lane_color);
     this.draw_obstacles(context, program_state);
   }
 
@@ -41,8 +42,8 @@ export class Lane {
 
 // for moving obstacles
 export class Road extends Lane {
-  constructor(model_transform, color = hex_color("#525866"), lane_x_width) {
-    super(model_transform, color, lane_x_width);
+  constructor(model_transform, color = hex_color("#525866"), lane_x_width, lane_depth) {
+    super(model_transform, color, lane_x_width, lane_depth);
 
   }
 
@@ -128,8 +129,8 @@ export class Road extends Lane {
 
 // no moving obstacles
 export class RestLane extends Lane {
-  constructor(model_transform, color, lane_width) {
-    super(model_transform, color, lane_width);
+  constructor(model_transform, color, lane_width, lane_depth) {
+    super(model_transform, color, lane_width, lane_depth);
   }
 
   obstacle_init() {
@@ -152,7 +153,6 @@ export class RestLane extends Lane {
             overlap = true;
         })
       } while (overlap)
-      console.log(start_offset);
       this.obstacles.push(new StationaryObstacle(this.lane_transform, this.x_bound, start_offset, z_offset));
     }
   }
