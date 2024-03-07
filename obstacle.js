@@ -7,17 +7,17 @@ const {
 
 export class Obstacle {
   constructor(model_transform, x_bound, x_radius, z_radius, start_offset, z_offset) {
-    this.x_bound = x_bound
+    this.x_bound = x_bound; // lane bound
     this.x_radius = x_radius;
     this.z_radius = z_radius;
     this.start_offset = start_offset;
     this.x_pos = this.start_offset;
-    this.transform = Mat4.identity().times(Mat4.translation(this.start_offset, 0, model_transform[2][3] + z_offset));
-    const r = Math.random() * 127 + 127;
-    const g = Math.random() * 127 + 127;
-    const b = Math.random() * 127 + 127;
-    this.color = color(r / 255, g / 255, b / 255, 1);
     this.z_offset = z_offset;
+    this.transform = Mat4.identity().times(Mat4.translation(this.start_offset, 0, model_transform[2][3] + z_offset));
+    // const r = Math.random() * 127 + 127;
+    // const g = Math.random() * 127 + 127;
+    // const b = Math.random() * 127 + 127;
+    // this.color = color(r / 255, g / 255, b / 255, 1);
   }
 
   handle_position(dt) {
@@ -44,6 +44,7 @@ export class MovingObstacle extends Obstacle {
 
   handle_position(dt) {
     this.x_pos += this.speed * dt * this.direction;
+    // hitting sides of lane
     if (this.x_pos <= -this.x_bound + this.x_radius || this.x_pos >= this.x_bound - this.x_radius) {
       this.on_bound_collision(this.x_bound);
     }
@@ -75,11 +76,10 @@ export class MovingObstacle extends Obstacle {
     }
   }
 
-  on_chicken_collision(chicken, x_dist) {
+  on_chicken_collision(chicken) {
     const x = chicken.transform[0][3];
-    const x_rad = chicken.x_rad;
-    const min_x = x_rad + this.x_radius;
-    if (x_dist < 0) {
+    const min_x = chicken.x_rad + this.x_radius;
+    if (this.x_pos - x < 0) {
       this.direction = -1;
       this.x_pos = x - min_x;
     } else {

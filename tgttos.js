@@ -27,7 +27,6 @@ export class Tgttos extends Scene {
     this.lane_colors = [hex_color('#b2e644'), hex_color('#699e1c')]
     this.lanes = []
 
-
     // special first lane
     this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound));
     this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
@@ -64,9 +63,9 @@ export class Tgttos extends Scene {
 
   display(context, program_state) {
 
-    if (!context.scratchpad.controls) {
-      this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
-    }
+    // if (!context.scratchpad.controls) {
+    //   this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+    // }
 
     const t = program_state.animation_time / 1000;
     const dt = program_state.animation_delta_time / 1000;
@@ -107,25 +106,21 @@ export class Tgttos extends Scene {
 
     const draw_toast = x === 0 && z === 0;
     this.text_canvas.handleCanvas
-    (this.score, draw_toast, "WASD to move!", this.chicken.dead, () => this.init());
+      (this.score, draw_toast, "WASD to move!", this.chicken.dead, () => this.init());
 
 
     // models.drawScore(context, program_state, this.chicken.z_bound, this.score.toString())
 
 
     // handle and draw lanes and obstacles
-    const lane_end = (2 * this.lane_width) * ((this.chunks_rendered) * 10) + 6 * 2 * this.lane_width;
-    const num_lanes = this.chunks_rendered === 1 ? 16 : 26;
-    const first_lane_z = lane_end - num_lanes * 2 * this.lane_width;
-    const current_lane_z = Math.ceil(this.chunks_rendered === 1 ? 1 : (z - first_lane_z) / (2 * this.lane_width))
-
+    const current_chicken_lane_index =
+      Math.ceil(this.chunks_rendered === 1 ? 1 : (z - this.lanes[0].lane_z) / (2 * this.lane_width))
     this.lanes.forEach((lane, i) => {
-      const highlight_lane = this.highlight && (i === current_lane_z || i === current_lane_z - 1);
-      const lane_z = first_lane_z + i * 2 * this.lane_width;
+      const highlight_lane = this.highlight && (i === current_chicken_lane_index || i === current_chicken_lane_index - 1);
       const check_chicken =
-        lane === this.lanes[current_lane_z] || lane === this.lanes[current_lane_z - 1]
+        lane === this.lanes[current_chicken_lane_index] || lane === this.lanes[current_chicken_lane_index - 1]
       lane.handle_obstacles(dt);
-      if (check_chicken) lane.check_chicken_collision(this.chicken, lane_z)
+      if (check_chicken) lane.check_chicken_collision(this.chicken);
       lane.draw(context, program_state, highlight_lane);
     })
 
