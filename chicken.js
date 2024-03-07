@@ -13,7 +13,7 @@ export class Chicken {
     this.moving_back = false;
     this.speed = 40;
     this.x_bound = x_bound; // how far left and right player can move
-    this.z_bound = -100;
+    this.z_bound = z_bound;
     this.transform = Mat4.identity();
     this.angle = 0;
     this.start_move_time = 0;
@@ -24,9 +24,14 @@ export class Chicken {
     this.dead = false;
     this.x_rad = 0.6;
     this.z_rad = 0.75;
+    this.x_pos = 0;
+    this.z_pos = 0;
   }
 
   draw(context, program_state) {
+    this.transform[0][3] = this.x_pos;
+    this.transform[2][3] = -this.z_pos;
+
     const chicken_model_transform = this.transform
       .times(Mat4.rotation(this.angle, 0, 1, 0))
       .times(Mat4.translation(0, this.height, 0));
@@ -35,13 +40,6 @@ export class Chicken {
 
   handle_movement(t, dt) {
     if (this.dead) return;
-    const x_pos = this.transform[0][3];
-    const z_pos = -this.transform[2][3];
-
-    const x_trans = (x_pos >= this.x_bound && this.moving_right - this.moving_left > 0) || (x_pos <= -this.x_bound && this.moving_right - this.moving_left < 0)
-      ? 0 : (this.moving_right - this.moving_left) * this.speed * dt;
-    const z_trans = (z_pos <= this.z_bound && this.moving_forward - this.moving_back < 0)
-      ? 0 : (this.moving_back - this.moving_forward) * this.speed * dt;
 
     if (this.moving_left - this.moving_right > 0) this.angle = Math.PI / 2;
     else if (this.moving_right - this.moving_left > 0) this.angle = -Math.PI / 2
@@ -49,6 +47,9 @@ export class Chicken {
     else if (this.moving_back - this.moving_forward > 0) this.angle = Math.PI;
     this.x_rad = this.angle === 0 || this.angle === Math.PI ? 0.6 : 0.75;
     this.z_rad = this.angle === 0 || this.angle === Math.PI ? 0.75 : 0.6;
+
+    this.x_pos += (this.moving_right - this.moving_left) * this.speed * dt;
+    this.z_pos += (this.moving_forward - this.moving_back) * this.speed * dt;
 
     const moving = this.moving_left || this.moving_right || this.moving_forward || this.moving_back;
     if (moving) {
@@ -62,7 +63,14 @@ export class Chicken {
       this.height = 0;
     }
 
-    this.transform = Mat4.translation(x_trans, 0, z_trans)
-      .times(this.transform);
+    const min_x = -this.x_bound + this.x_rad;
+    const max_x = this.x_bound - this.x_rad;
+    if (this.x_pos < min_x)
+      this.x_pos = min_x;
+    if (this.x_pos > max_x)
+      this.x_pos = max_x;
+    if (this.z_pos < this.z_bound)
+      this.z_pos = this.z_bound;
+
   }
 }

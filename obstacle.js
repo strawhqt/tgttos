@@ -93,7 +93,7 @@ export class MovingObstacle extends Obstacle {
 
 export class Car extends MovingObstacle {
   constructor(model_transform, x_bound, start_offset, z_offset = 0) {
-    super(model_transform, x_bound, 3, 2, start_offset, z_offset );
+    super(model_transform, x_bound, 3, 2, start_offset, z_offset);
     this.color_palettes = {
       0: [hex_color("#fd6e30"), hex_color("#ff4c2b")],
       1: [hex_color("#8077a2"), hex_color("#6b5c95")],

@@ -14,7 +14,7 @@ const shapes = {
 
 const materials = {
   plastic: new Material(new defs.Phong_Shader(),
-    {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
+    {ambient: 1, diffusivity: .6, color: hex_color("#ffffff")}),
   cube: new Material(new defs.Phong_Shader(),
     {ambient: 0.8, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
   obstacle: new Material(new defs.Phong_Shader(),

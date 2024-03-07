@@ -45,7 +45,8 @@ export class Tgttos extends Scene {
     this.key_triggered_button("Back", ["s"], () => this.chicken.moving_back = true, '#6E6460', () => this.chicken.moving_back = false);
     this.key_triggered_button("Right", ["d"], () => this.chicken.moving_right = true, '#6E6460', () => this.chicken.moving_right = false);
     this.key_triggered_button("Egg", [" "], () => {
-      this.chicken.eggs.push(this.chicken.transform);
+      const egg_transform = Mat4.translation(this.chicken.x_pos, 0, -this.chicken.z_pos);
+      this.chicken.eggs.push(egg_transform);
       this.chicken.eggs = this.chicken.eggs.slice(-10);
       const speed_change = 20;
       this.chicken.speed += speed_change;

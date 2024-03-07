@@ -107,6 +107,8 @@ export class Road extends Lane {
 
   draw_obstacles(context, program_state) {
     this.obstacles.forEach((obs) => {
+      // everything that changes obstacle position modifies x_pos
+      // so we apply that to the transform here
       obs.transform[0][3] = obs.x_pos;
       obs.orientation = obs.direction === 1 ? 0 : Math.PI;
       if (obs instanceof Car) {
