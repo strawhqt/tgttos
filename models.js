@@ -1,5 +1,6 @@
 import {defs, tiny} from './examples/common.js';
 import {Text_Line} from "./examples/text-demo.js";
+
 const {
   Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene, Texture,
 } = tiny;
@@ -166,12 +167,9 @@ export function drawLane(context, program_state, model_transform, color) {
   // shapes.score.draw(context, program_state, model_transform, materials.text_image);
   shapes.cube.draw(context, program_state, model_transform, materials.ground.override({color: color}));
 }
-export function drawBackground(context, program_state, model_transform) {
-  model_transform = Mat4.translation(0, -4, 0)
-    .times(model_transform)
-    .times(Mat4.scale(120, 1, 120))
-  ;
-  shapes.cube.draw(context, program_state, model_transform, materials.background);
+
+export function drawObstacle(context, program_state, model_transform, color) {
+  shapes.cube.draw(context, program_state, model_transform, materials.obstacle.override({color: color}));
 }
 
 export function drawEgg(context, program_state, model_transform) {

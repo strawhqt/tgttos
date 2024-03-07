@@ -2,7 +2,7 @@ import {defs, tiny} from './examples/common.js';
 import * as models from './models.js';
 import {Lane, Road, RestLane} from "./lane.js";
 import {Chicken} from "./chicken.js";
-import {Score} from "./text-canvas.js";
+import {TextCanvas} from "./text-canvas.js";
 
 const {
   Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene,
@@ -12,6 +12,7 @@ export class Tgttos extends Scene {
   constructor() {
     super();
     this.init();
+    this.text_canvas = new TextCanvas();
   }
 
   init() {
@@ -25,7 +26,7 @@ export class Tgttos extends Scene {
       .times(Mat4.translation(0, -2, 0));
     this.lane_colors = [hex_color('#b2e644'), hex_color('#699e1c')]
     this.lanes = []
-    this.score_canvas = new Score();
+
 
     // special first lane
     this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound));
@@ -54,10 +55,10 @@ export class Tgttos extends Scene {
       }, 500)
     }, '#6E6460');
     this.key_triggered_button("highlight checked lanes", ["h"], () => this.highlight = !this.highlight, '#6E6460');
-    this.key_triggered_button("revive", ["e"], () => this.chicken.dead = false)
-    this.key_triggered_button("restart", ["r"], () => {
-      this.init();
-    })
+    this.key_triggered_button("revive", ["e"], () => {
+      this.chicken.dead = false;
+    });
+    this.key_triggered_button("restart", ["r"], this.init);
     this.key_triggered_button("invincibility", ["i"], () => this.chicken.invincible = !this.chicken.invincible)
   }
 
@@ -102,9 +103,12 @@ export class Tgttos extends Scene {
 
     // score
     this.score = Math.max(this.score, Math.floor(z / (2 * this.lane_width)));
-    this.score_canvas.drawScore(this.score);
-    if (x === 0 && z === 0)
-      this.score_canvas.drawToast("WASD to move!", t);
+
+
+    const draw_toast = x === 0 && z === 0;
+    this.text_canvas.handleCanvas
+    (this.score, draw_toast, "WASD to move!", this.chicken.dead, () => this.init());
+
 
     // models.drawScore(context, program_state, this.chicken.z_bound, this.score.toString())
 
