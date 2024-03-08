@@ -13,7 +13,8 @@ export class Obstacle {
     this.start_offset = start_offset;
     this.x_pos = this.start_offset;
     this.z_offset = z_offset;
-    this.transform = Mat4.identity().times(Mat4.translation(this.start_offset, 0, model_transform[2][3] + z_offset));
+    this.z_pos = -(model_transform[2][3] + z_offset);
+    this.transform = Mat4.identity().times(Mat4.translation(this.start_offset, 0, -this.z_pos));
     // const r = Math.random() * 127 + 127;
     // const g = Math.random() * 127 + 127;
     // const b = Math.random() * 127 + 127;
@@ -29,7 +30,7 @@ export class Obstacle {
   on_bound_collision() {
   }
 
-  on_chicken_collision(chicken, x_dist) {
+  on_chicken_collision(chicken) {
   }
 
 }
@@ -54,11 +55,15 @@ export class MovingObstacle extends Obstacle {
     if (other_obs.x_pos < this.x_pos)
       this.x_pos = other_obs.x_pos + min_x_dist;
     else
-      this.x_pos = other_obs.x_pos - min_x_dist; // force apart because buggy af otherwise
-
+      this.x_pos = other_obs.x_pos - min_x_dist;
+    // force apart because buggy af otherwise
+    // note that collision won't trigger for the other obstacle because they're no longer overlapping
     if (other_obs instanceof MovingObstacle) {
       [this.speed, other_obs.speed, this.direction, other_obs.direction] =
         [other_obs.speed, this.speed, other_obs.direction, this.direction]
+    }
+    else if (other_obs instanceof StationaryObstacle) {
+      this.direction = -this.direction;
     }
   }
 
@@ -105,5 +110,26 @@ export class Car extends MovingObstacle {
 export class StationaryObstacle extends Obstacle {
   constructor(model_transform, x_bound, start_offset, z_offset) {
     super(model_transform, x_bound, 1, 1, start_offset, z_offset);
+  }
+
+  on_chicken_collision(chicken) {
+    const min_x = this.x_radius + chicken.x_rad;
+    const min_z = this.z_radius + chicken.z_rad;
+
+    switch(chicken.angle) {
+      case 0:             // chicken moving forward
+        chicken.z_pos = this.z_pos - min_z;
+        break;
+      case Math.PI / 2:   // chicken moving left
+        chicken.x_pos = this.x_pos + min_x;
+        break;
+      case -Math.PI / 2:  // chicken moving right
+        chicken.x_pos = this.x_pos - min_x;
+        break;
+      case Math.PI:       // chicken moving down
+        chicken.z_pos = this.z_pos + min_z;
+        break;
+    }
+
   }
 }

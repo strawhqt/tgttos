@@ -99,12 +99,6 @@ export class Tgttos extends Scene {
     const light_position = vec4(0, 5, -z, 1);
     program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 100)];
 
-    // main character
-    this.chicken.draw(context, program_state);
-    // models.drawBackground(context, program_state, this.chicken.transform);
-    this.chicken.eggs.forEach((egg_model_transform) => {
-      models.drawEgg(context, program_state, egg_model_transform);
-    })
 
     // score
     this.score = Math.max(this.score, Math.floor(z / (2 * this.lane_depth)));
@@ -122,12 +116,18 @@ export class Tgttos extends Scene {
     const current_chicken_lane_index =
       Math.ceil(this.chunks_rendered === 1 ? 1 : (z - this.lanes[0].lane_z) / (2 * this.lane_depth))
     this.lanes.forEach((lane, i) => {
-      const highlight_lane = this.highlight && (i === current_chicken_lane_index || i === current_chicken_lane_index - 1);
-      const check_chicken =
-        lane === this.lanes[current_chicken_lane_index] || lane === this.lanes[current_chicken_lane_index - 1]
+      const check_chicken = (i === current_chicken_lane_index || i === current_chicken_lane_index - 1);
+      const highlight_lane = this.highlight && check_chicken;
       lane.handle_obstacles(dt);
       if (check_chicken) lane.check_chicken_collision(this.chicken);
       lane.draw(context, program_state, highlight_lane);
+    })
+
+    // main character
+    this.chicken.draw(context, program_state);
+    // models.drawBackground(context, program_state, this.chicken.transform);
+    this.chicken.eggs.forEach((egg_model_transform) => {
+      models.drawEgg(context, program_state, egg_model_transform);
     })
 
     // generates new lanes and deletes old ones

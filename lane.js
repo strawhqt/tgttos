@@ -36,7 +36,19 @@ export class Lane {
   handle_obstacles() {
   }
 
-  check_chicken_collision() {
+  check_chicken_collision(chicken) {
+    const x_rad = chicken.x_rad;
+    const z_rad = chicken.z_rad;
+    for (let obs of this.obstacles) {
+      const min_x = x_rad + obs.x_radius;
+      const min_z = z_rad + obs.z_radius;
+      const obs_z_pos = this.lane_z - obs.z_offset;
+      const x_dist = Math.abs(chicken.x_pos - obs.x_pos);
+      const z_dist = Math.abs(chicken.z_pos - obs_z_pos);
+      if (z_dist < min_z && x_dist < min_x) {
+        obs.on_chicken_collision(chicken);
+      }
+    }
   }
 
 }
@@ -95,23 +107,6 @@ export class Road extends Lane {
       obstacle.handle_position(dt);
     })
     this.obstacle_collisions();
-  }
-
-  check_chicken_collision(chicken) {
-    const x = chicken.transform[0][3];
-    const z = -chicken.transform[2][3];
-    const x_rad = chicken.x_rad;
-    const z_rad = chicken.z_rad;
-    for (let obs of this.obstacles) {
-      const min_x = x_rad + obs.x_radius;
-      const min_z = z_rad + obs.z_radius;
-      const obs_z_pos = this.lane_z - obs.z_offset;
-      const x_dist = Math.abs(obs.x_pos - x);
-      const z_dist = Math.abs(z - obs_z_pos); // don't care about sign for z
-      if (z_dist < min_z && x_dist < min_x) {
-        obs.on_chicken_collision(chicken);
-      }
-    }
   }
 
   draw_obstacles(context, program_state) {
