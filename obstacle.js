@@ -109,13 +109,16 @@ export class Car extends MovingObstacle {
 
 export class StationaryObstacle extends Obstacle {
   constructor(model_transform, x_bound, start_offset, z_offset) {
-    super(model_transform, x_bound, 1, 1, start_offset, z_offset);
+    super(model_transform, x_bound, 1.4, 1.4, start_offset, z_offset);
   }
+
 
   on_chicken_collision(chicken) {
     const min_x = this.x_radius + chicken.x_rad;
     const min_z = this.z_radius + chicken.z_rad;
-
+    console.log(Math.abs(this.x_pos - chicken.x_pos) - min_x);
+    const chicken_x = chicken.x_pos;
+    const chicken_z = chicken.z_pos;
     switch(chicken.angle) {
       case 0:             // chicken moving forward
         chicken.z_pos = this.z_pos - min_z;
@@ -130,6 +133,19 @@ export class StationaryObstacle extends Obstacle {
         chicken.z_pos = this.z_pos + min_z;
         break;
     }
+
+    const left = chicken.moving_left > chicken.moving_right;
+    const right = chicken.moving_left < chicken.moving_right;
+    const down = chicken.angle === Math.PI;
+    const up = chicken.angle === 0;
+    if (right && (down || up) || left && (down || up)) {
+      const chicken_prev_x = chicken.transform[0][3];
+      const chicken_prev_z = -chicken.transform[2][3];
+      // parametric equation from two points
+      // find first intersection edge
+      // if left or right edge, act accordingly
+    }
+
 
   }
 }

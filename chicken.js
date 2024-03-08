@@ -11,7 +11,8 @@ export class Chicken {
     this.moving_right = false;
     this.moving_forward = false;
     this.moving_back = false;
-    this.speed = 40;
+    this.min_speed = 40;
+    this.speed = this.min_speed;
     this.x_bound = x_bound; // how far left and right player can move
     this.z_bound = z_bound;
     this.transform = Mat4.identity();

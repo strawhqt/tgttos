@@ -7,7 +7,7 @@ const {
 } = tiny;
 
 export class Lane {
-  constructor(model_transform, color, lane_x_width, lane_depth, before_rest_lane = false, no_obstacles = false) {
+  constructor(model_transform, color, lane_x_width, lane_depth, before_rest_lane = false, safe = false) {
     this.lane_transform = model_transform;
     this.lane_z = -this.lane_transform[2][3];
     this.color = color;
@@ -16,8 +16,7 @@ export class Lane {
     this.before_rest_lane = before_rest_lane;
 
     this.obstacles = []
-    this.obstacle_count = Math.floor(Math.random() * 3);
-    this.obstacle_init();
+    this.obstacle_count = 0;
   }
 
   obstacle_init() {
@@ -57,10 +56,12 @@ export class Lane {
 export class Road extends Lane {
   constructor(model_transform, lane_x_width, lane_depth) {
     super(model_transform, hex_color("#525866"), lane_x_width, lane_depth);
-
+    this.obstacle_init();
   }
 
   obstacle_init() {
+    this.obstacle_count = Math.floor(Math.random() * 3);
+
     for (let i = 0; i < this.obstacle_count; i++) {
       let overlap = false;
       let start_offset = 0;
@@ -125,11 +126,15 @@ export class Road extends Lane {
 
 // no moving obstacles
 export class RestLane extends Lane {
-  constructor(model_transform, color, lane_width, lane_depth) {
+  constructor(model_transform, color, lane_width, lane_depth, safe = false) {
     super(model_transform, color, lane_width, lane_depth);
+    if (!safe)
+      this.obstacle_init();
   }
 
   obstacle_init() {
+
+    this.obstacle_count = Math.floor(Math.random() * 6);
     for (let i = 0; i < this.obstacle_count; i++) {
       let overlap = false;
       let start_offset = 0;
@@ -143,7 +148,7 @@ export class RestLane extends Lane {
         this.obstacles.forEach((obs) => {
           const x_dist = Math.abs(start_offset - obs.x_pos);
           const z_dist = Math.abs(z_offset - obs.z_offset);
-          const min_x_dist = obs_x_rad + obs.x_radius;
+          const min_x_dist = obs_x_rad + obs.x_radius + 0.5;
           const min_z_dist = obs_z_rad + obs.z_radius;
           if (x_dist < min_x_dist && z_dist < min_z_dist)
             overlap = true;

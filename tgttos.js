@@ -24,10 +24,10 @@ export class Tgttos extends Scene {
     this.chunks_rendered = 1;
     this.lane_transform = Mat4.identity().times(Mat4.scale(this.x_bound, 1, this.lane_depth))
       .times(Mat4.translation(0, -2, 0));
-    this.lane_colors = [hex_color('#b2e644'), hex_color('#699e1c')]
+    this.lane_colors = [hex_color('#ace065'), hex_color('#a0d15a')]
     this.lanes = []
 
-    this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound, this.lane_depth)); // first lane
+    this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound, this.lane_depth, true)); // first lane
     this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     for (let i = 1; i < 16; i++) {
       if (Math.random() < 0.3) {
@@ -56,7 +56,7 @@ export class Tgttos extends Scene {
       const speed_change = 20;
       this.chicken.speed += speed_change;
       setTimeout(() => {
-        this.chicken.speed -= speed_change;
+        this.chicken.speed = Math.max(this.chicken.speed - 20, this.chicken.min_speed);
       }, 500)
     }, '#6E6460');
     this.key_triggered_button("highlight checked lanes", ["h"], () => this.highlight = !this.highlight, '#6E6460');
@@ -96,7 +96,7 @@ export class Tgttos extends Scene {
       Math.PI / 4.5, context.width / context.height, 1, 200);
 
     // *** Lights: *** Values of vector or point lights.
-    const light_position = vec4(0, 5, -z, 1);
+    const light_position = vec4(0, 20, -z, 1);
     program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 100)];
 
 
@@ -134,7 +134,6 @@ export class Tgttos extends Scene {
     if (z > (this.chunks_rendered - 1) * 10 * 2 * this.lane_depth + 2 * this.lane_depth) {
       this.chunks_rendered++;
       this.lanes = this.lanes.slice(-16);
-      console.log(this.lanes);
       for (let i = 0; i < 10; i++) {
         if (Math.random() < 0.3) {
           if (this.lanes.length > 1) this.lanes.at(-1).before_rest_lane = true;

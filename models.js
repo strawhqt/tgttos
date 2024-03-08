@@ -11,6 +11,7 @@ const shapes = {
   triangle: new defs.Triangle(),
   egg: new defs.Subdivision_Sphere(4),
   text: new Text_Line(8),
+
 }
 
 const materials = {
@@ -30,6 +31,12 @@ const materials = {
     ambient: 1, diffusivity: 0, specularity: 0,
     texture: new Texture("assets/text.png")
   }),
+  trunk: new Material(new defs.Phong_Shader(),
+    {ambient: 0.8, diffusivity: .6, specularity:0, color: hex_color("#442c0f")}),
+  leaf_light: new Material(new defs.Phong_Shader(),
+    {ambient: 0.8, diffusivity: 1, specularity:0, color: hex_color("#bad935")}),
+  leaf_dark: new Material(new defs.Phong_Shader(),
+    {ambient: 0.8, diffusivity: 1, specularity:0, color: hex_color("#a7c525")}),
 }
 
 
@@ -87,7 +94,7 @@ export function drawChicken(context, program_state, model_transform, dead, wing_
 }
 
 function drawDeadChicken(context, program_state, model_transform) {
-
+  model_transform[1][3] = 0; // force chicken to ground
   const body_transform = backAndForth(Mat4.scale(0.7, 0.05, 0.9), 0, 1, 0);
   const wing_angle = Math.PI / 2;
 
@@ -247,7 +254,32 @@ export function drawEgg(context, program_state, model_transform) {
 }
 
 export function drawTree(context, program_state, model_transform) {
-  shapes.cube.draw(context, program_state, model_transform, materials.cube);
+  // const base_transform = Mat4.identity().times(backAndForth(Mat4.scale(0.6, 0.15, 0.6), 0, 1, 0));
+  const trunk_y = 0.5;
+  const trunk_transform = Mat4.identity()
+    .times(backAndForth(Mat4.scale(0.7, trunk_y, 0.7), 0, 1, 0))
+
+  const leaf_y = 0.6;
+  let leaf_transform = trunk_transform
+    .times(Mat4.translation(0, 1, 0))
+    .times(Mat4.scale(2, leaf_y, 2))
+    .times(Mat4.translation(0, 1, 0));
+
+  shapes.cube.draw(context, program_state, model_transform.times(trunk_transform), materials.trunk);
+  shapes.cube.draw(context, program_state, model_transform.times(leaf_transform), materials.leaf_dark);
+
+  const ratio = 2.5;
+  const scales = [ratio, 1/ratio];
+  const leaf_y_trans = trunk_y * 2 * leaf_y;
+  const translations = [leaf_y_trans, ratio * leaf_y_trans];
+  for (let i = 0; i < 4; i++) {
+    leaf_transform = Mat4.identity()
+      .times(Mat4.translation(0, translations[i % 2], 0))
+      .times(leaf_transform)
+      .times(backAndForth(Mat4.scale(1, scales[i % 2], 1), 0, 1, 0))
+    const mat = i % 2 ? materials.leaf_dark : materials.leaf_light;
+    shapes.cube.draw(context, program_state, model_transform.times(leaf_transform), mat);
+  }
 }
 
 // export function drawScore(context, program_state, z, score) {
