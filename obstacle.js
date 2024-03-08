@@ -76,15 +76,15 @@ export class MovingObstacle extends Obstacle {
   }
 
   on_chicken_collision(chicken) {
-    const x = chicken.transform[0][3];
-    const min_x = chicken.x_rad + this.x_radius;
-    if (this.x_pos - x < 0) {
-      this.direction = -1;
-      this.x_pos = x - min_x;
-    } else {
-      this.direction = 1;
-      this.x_pos = x + min_x;
-    }
+    // const x = chicken.transform[0][3];
+    // const min_x = chicken.x_rad + this.x_radius;
+    // if (this.x_pos - x < 0) {
+    //   this.direction = -1;
+    //   this.x_pos = x - min_x;
+    // } else {
+    //   this.direction = 1;
+    //   this.x_pos = x + min_x;
+    // }
     if (!chicken.invincible)
       chicken.dead = true;
   }

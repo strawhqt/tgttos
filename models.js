@@ -17,7 +17,7 @@ const materials = {
   plastic: new Material(new defs.Phong_Shader(),
     {ambient: 1, diffusivity: .6, color: hex_color("#ffffff")}),
   cube: new Material(new defs.Phong_Shader(),
-    {ambient: 0.8, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
+    {ambient: 0.9, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
   obstacle: new Material(new defs.Phong_Shader(),
     {ambient: 0.9, diffusivity: 1, specularity: 0, color: hex_color("#FFC0CB")}),
   ground: new Material(new defs.Phong_Shader(),
@@ -39,49 +39,82 @@ function backAndForth(model_transform, x, y, z) {
 
 export function drawChicken(context, program_state, model_transform, dead, wing_angle) {
 
-  const dead_transform = dead ? Mat4.rotation(Math.PI / 2, 0, 0, 1) : Mat4.identity();
-  if (dead) wing_angle = 0;
+  if (dead) {
+    drawDeadChicken(context, program_state, model_transform);
+  }
+  else {
+    const body_transform = backAndForth(Mat4.scale(0.6, 0.6, 0.75), 0, 1, 0);
 
-  const body_transform = backAndForth(Mat4.scale(0.6, 0.6, 0.75), 0, 1, 0).times(dead_transform);
+    const head_transform = body_transform
+      .times(Mat4.translation(0, 1, -1))
+      .times(Mat4.scale(1, 0.7, 0.7))
+      .times(Mat4.translation(0, 1, 1));
+    // const wing_angle = moving ? Math.PI / 2 : 0;
+    const right_wing_transform = body_transform
+      .times(Mat4.translation(1, -0.2, 0.1))
+      .times(Mat4.scale(1, 0.6, 0.7))
+      .times(backAndForth(Mat4.rotation(wing_angle, 0, 0, 1), 0.2, -1, 0))
+      .times(Mat4.scale(0.2, 1, 1))
+    ;
+    const left_wing_transform = body_transform
+      .times(Mat4.translation(-1, -0.2, 0.1))
+      .times(Mat4.scale(1, 0.6, 0.7))
+      .times(backAndForth(Mat4.rotation(-wing_angle, 0, 0, 1), -0.2, -1, 0))
+      .times(Mat4.scale(0.2, 1, 1))
+    ;
+    const eye_transform = head_transform
+      .times(Mat4.translation(0, 0.1, -0.2))
+      .times(Mat4.scale(1.04, 0.2, 0.2));
+    const hat_transform = body_transform
+      .times(Mat4.translation(0, 3.4, 0.2))
+      .times(backAndForth(Mat4.scale(0.3, 0.2, 0.4), 0, 1, 1))
+    const beak_transform = body_transform
+      .times(Mat4.translation(0, 1.7, -2))
+      .times(backAndForth(Mat4.scale(1, 1, 0.2), 0, 0, -1))
+      .times(Mat4.scale(0.3, 0.4, 1));
+    const wattle_transform = body_transform
+      .times(Mat4.translation(0, 0.8, -2))
+      .times(backAndForth(Mat4.scale(0.2, 0.8, 0.13), 0, -1, -1))
+    shapes.cube.draw(context, program_state, model_transform.times(body_transform), materials.cube);
+    shapes.cube.draw(context, program_state, model_transform.times(head_transform), materials.cube);
+    shapes.cube.draw(context, program_state, model_transform.times(right_wing_transform), materials.cube);
+    shapes.cube.draw(context, program_state, model_transform.times(left_wing_transform), materials.cube);
+    shapes.cube.draw(context, program_state, model_transform.times(eye_transform), materials.cube.override({color: vec4(0, 0, 0, 1)}));
+    shapes.cube.draw(context, program_state, model_transform.times(hat_transform), materials.cube.override({color: vec4(1, 0, 0, 1)}));
+    shapes.cube.draw(context, program_state, model_transform.times(beak_transform), materials.cube.override({color: hex_color('#FFA500')}));
+    shapes.cube.draw(context, program_state, model_transform.times(wattle_transform), materials.cube.override({color: vec4(1, 0, 0, 1)}));
+  }
+}
 
-  const head_transform = body_transform
-    .times(Mat4.translation(0, 1, -1))
-    .times(Mat4.scale(1, 0.7, 0.7))
-    .times(Mat4.translation(0, 1, 1));
-  // const wing_angle = moving ? Math.PI / 2 : 0;
+function drawDeadChicken(context, program_state, model_transform) {
+
+  const body_transform = backAndForth(Mat4.scale(0.7, 0.05, 0.9), 0, 1, 0);
+  const wing_angle = Math.PI / 2;
+
   const right_wing_transform = body_transform
     .times(Mat4.translation(1, -0.2, 0.1))
-    .times(Mat4.scale(1, 0.6, 0.7))
+    .times(Mat4.scale(0.6, 0.6, 0.7))
     .times(backAndForth(Mat4.rotation(wing_angle, 0, 0, 1), 0.2, -1, 0))
     .times(Mat4.scale(0.2, 1, 1))
   ;
   const left_wing_transform = body_transform
-    .times(Mat4.translation(-1, -0.2, -0.1))
-    .times(Mat4.scale(1, 0.6, 0.7))
+    .times(Mat4.translation(-1, -0.2, 0.1))
+    .times(Mat4.scale(0.6, 0.6, 0.7))
     .times(backAndForth(Mat4.rotation(-wing_angle, 0, 0, 1), -0.2, -1, 0))
     .times(Mat4.scale(0.2, 1, 1))
   ;
-  const eye_transform = head_transform
-    .times(Mat4.translation(0, 0.1, -0.2))
-    .times(Mat4.scale(1.04, 0.2, 0.2));
   const hat_transform = body_transform
-    .times(Mat4.translation(0, 3.4, 0.2))
-    .times(backAndForth(Mat4.scale(0.3, 0.2, 0.4), 0, 1, 1))
+    .times(Mat4.translation(0, 1.9, 0.2))
+    .times(backAndForth(Mat4.scale(0.4, 0.2, 0.4), 0, 1, 1))
   const beak_transform = body_transform
     .times(Mat4.translation(0, 1.7, -2))
-    .times(backAndForth(Mat4.scale(1, 1, 0.2), 0, 0, -1))
+    .times(backAndForth(Mat4.scale(1.1, 1, 0.2), 0, 0, -1))
     .times(Mat4.scale(0.3, 0.4, 1));
-  const wattle_transform = body_transform
-    .times(Mat4.translation(0, 0.8, -2))
-    .times(backAndForth(Mat4.scale(0.2, 0.8, 0.13), 0, -1, -1))
   shapes.cube.draw(context, program_state, model_transform.times(body_transform), materials.cube);
-  shapes.cube.draw(context, program_state, model_transform.times(head_transform), materials.cube);
   shapes.cube.draw(context, program_state, model_transform.times(right_wing_transform), materials.cube);
   shapes.cube.draw(context, program_state, model_transform.times(left_wing_transform), materials.cube);
-  shapes.cube.draw(context, program_state, model_transform.times(eye_transform), materials.cube.override({color: vec4(0, 0, 0, 1)}));
   shapes.cube.draw(context, program_state, model_transform.times(hat_transform), materials.cube.override({color: vec4(1, 0, 0, 1)}));
   shapes.cube.draw(context, program_state, model_transform.times(beak_transform), materials.cube.override({color: hex_color('#FFA500')}));
-  shapes.cube.draw(context, program_state, model_transform.times(wattle_transform), materials.cube.override({color: vec4(1, 0, 0, 1)}));
 }
 
 export function drawCar(context, program_state, model_transform, color1 = hex_color("#ffffff"), color2 = hex_color("#ffffff")) {

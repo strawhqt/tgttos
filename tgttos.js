@@ -16,7 +16,7 @@ export class Tgttos extends Scene {
   }
 
   init() {
-    this.x_bound = 20; // how far left and right player can move
+    this.x_bound = 30; // how far left and right player can move
     this.z_bound = -100;
     this.chicken = new Chicken(20, -100);
     this.camera_z_bound = -100;

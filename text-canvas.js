@@ -51,11 +51,11 @@ export class TextCanvas {
     }
 
     // draw score and toast
-    if (draw_toast) {
+    if (this.score === 0) {
       this.resetCanvas();
-      if (this.score === 0)
-        this.drawScore(this.score);
-      this.drawToast(toast, Date.now() / 1000);
+      this.drawScore(this.score);
+      if (draw_toast)
+        this.drawToast(toast, Date.now() / 1000);
     }
 
     if (dead && !this.death_drawn) {
