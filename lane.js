@@ -140,7 +140,7 @@ export class RestLane extends Lane {
       let start_offset = 0;
       const obs_x_rad = 1.4; // need to change depending on obstacle
       const obs_z_rad = 1.4; // need to change depending on obstacle
-      const z_offset = (Math.random() < 0.5) ? 2.6 : -2.6;
+      const z_offset = (Math.random() < 0.5) ? 2.8 : -2.6;
       do {
         overlap = false;
         const spawn_width = this.x_bound - obs_x_rad;
@@ -164,4 +164,5 @@ export class RestLane extends Lane {
         models.drawTree(context, program_state, obs.transform, obs.height);
     })
   }
+
 }

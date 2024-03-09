@@ -51,7 +51,7 @@ export class TextCanvas {
     }
 
     // draw score and toast
-    if (this.score === 0) {
+    if (this.score === 0 && !dead) {
       this.resetCanvas();
       this.drawScore(this.score);
       if (draw_toast)

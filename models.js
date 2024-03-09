@@ -235,12 +235,16 @@ export function drawLane(context, program_state, lane_type, x_bound, z_depth, mo
     shapes.cube.draw(context, program_state, model_transform, materials.ground.override({color: color}))
   }
   else {
-    shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0.01, 0)), materials.ground.override({color: color}));
+    shapes.cube.draw(context, program_state, model_transform, materials.ground.override({color: color}));
   }
 }
 
-export function drawObstacle(context, program_state, model_transform, color) {
-  shapes.cube.draw(context, program_state, model_transform, materials.obstacle.override({color: color}));
+export function drawFirstLane(context, program_state, lane_type, x_bound, z_depth, model_transform, color, before_rest_lane) {
+  const lane_transform = model_transform
+    .times(Mat4.translation(0, 0, -5))
+    .times(backAndForth(Mat4.scale(0, 0, 3), 0, 0, 1))
+
+  shapes.cube.draw(context, program_state, lane_transform, materials.ground.override({color: color}));
 }
 
 export function drawEgg(context, program_state, model_transform) {
@@ -281,12 +285,3 @@ export function drawTree(context, program_state, model_transform, height = 2) {
     shapes.cube.draw(context, program_state, model_transform.times(leaf_transform), mat);
   }
 }
-
-// export function drawScore(context, program_state, z, score) {
-//   const text_model_transform = Mat4.translation(0, 0, -z)
-//     .times(Mat4.translation(-14, 15.5, 0))
-//     .times(Mat4.rotation(-Math.PI / 6.5, 1, 0, 0))
-//   ;
-//   shapes.text.set_string(score, context.context);
-//   shapes.text.draw(context, program_state, text_model_transform, materials.text_image);
-// }

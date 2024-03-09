@@ -20,6 +20,7 @@ export class Tgttos extends Scene {
     this.z_bound = -100;
     this.chicken = new Chicken(23, -100);
     this.camera_z_bound = -100;
+    this.camera_speed = 0;
     this.lane_depth = 4; // how wide each lane is (in terms of z)
     this.chunks_rendered = 1;
     this.lane_transform = Mat4.identity().times(Mat4.scale(this.x_bound, 1, this.lane_depth))
@@ -50,14 +51,16 @@ export class Tgttos extends Scene {
     this.key_triggered_button("Back", ["s"], () => this.chicken.moving_back = true, '#6E6460', () => this.chicken.moving_back = false);
     this.key_triggered_button("Right", ["d"], () => this.chicken.moving_right = true, '#6E6460', () => this.chicken.moving_right = false);
     this.key_triggered_button("Egg", [" "], () => {
-      const egg_transform = Mat4.translation(this.chicken.x_pos, 0, -this.chicken.z_pos);
-      this.chicken.eggs.push(egg_transform);
-      this.chicken.eggs = this.chicken.eggs.slice(-10);
-      const speed_change = 20;
-      this.chicken.speed += speed_change;
-      setTimeout(() => {
-        this.chicken.speed = Math.max(this.chicken.speed - 20, this.chicken.min_speed);
-      }, 500)
+      if (!this.chicken.dead) {
+        const egg_transform = Mat4.translation(this.chicken.x_pos, 0, -this.chicken.z_pos);
+        this.chicken.eggs.push(egg_transform);
+        this.chicken.eggs = this.chicken.eggs.slice(-10);
+        const speed_change = 20;
+        this.chicken.speed += speed_change;
+        setTimeout(() => {
+          this.chicken.speed = Math.max(this.chicken.speed - 20, this.chicken.min_speed);
+        }, 500)
+    }
     }, '#6E6460');
     this.key_triggered_button("highlight checked lanes", ["h"], () => this.highlight = !this.highlight, '#6E6460');
     this.key_triggered_button("revive", ["e"], () => {
@@ -75,9 +78,10 @@ export class Tgttos extends Scene {
 
     const t = program_state.animation_time / 1000;
     const dt = program_state.animation_delta_time / 1000;
-    if (dt > 0.02) {
-      console.log(dt)
-    }
+
+    if (this.chicken.dead)
+      this.camera_speed = 0;
+
     // move chicken
     this.chicken.handle_movement(t, dt);
 
@@ -85,7 +89,11 @@ export class Tgttos extends Scene {
     const x = this.chicken.transform[0][3]; // +x on the right
     const z = -this.chicken.transform[2][3]; // +z into the page
     this.chicken.z_bound = Math.max(this.chicken.z_bound, z - this.lane_depth);
-    this.camera_z_bound = Math.max(this.camera_z_bound, z);
+    this.camera_z_bound = Math.max(this.camera_z_bound + this.camera_speed * dt, z);
+    if (z > 0)
+      this.camera_speed = 2;
+    if (this.camera_z_bound - z > 10)
+      this.chicken.dead = true;
 
     // attaches camera to cube
     program_state.set_camera(Mat4.identity()
@@ -106,7 +114,7 @@ export class Tgttos extends Scene {
     this.score = Math.max(this.score, Math.floor(z / (2 * this.lane_depth)));
 
 
-    const draw_toast = x === 0 && z === 0;
+    const draw_toast = x === 0 && z === 0 && !this.chicken.dead;
     this.text_canvas.handleCanvas
       (this.score, draw_toast, "WASD to move!", this.chicken.dead, () => this.init());
 

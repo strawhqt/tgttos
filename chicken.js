@@ -49,7 +49,7 @@ export class Chicken {
     this.x_rad = this.angle === 0 || this.angle === Math.PI ? 0.6 : 0.75;
     this.z_rad = this.angle === 0 || this.angle === Math.PI ? 0.75 : 0.6;
 
-    this.x_pos += (this.moving_right - this.moving_left) * this.speed * dt;
+    this.x_pos += (this.moving_right - this.moving_left) * this.min_speed * dt;
     this.z_pos += (this.moving_forward - this.moving_back) * this.speed * dt;
 
     const moving = this.moving_left || this.moving_right || this.moving_forward || this.moving_back;
