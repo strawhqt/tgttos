@@ -253,7 +253,7 @@ export function drawEgg(context, program_state, model_transform) {
   shapes.egg.draw(context, program_state, egg_model, materials.egg);
 }
 
-export function drawTree(context, program_state, model_transform) {
+export function drawTree(context, program_state, model_transform, height = 2) {
   // const base_transform = Mat4.identity().times(backAndForth(Mat4.scale(0.6, 0.15, 0.6), 0, 1, 0));
   const trunk_y = 0.5;
   const trunk_transform = Mat4.identity()
@@ -272,7 +272,7 @@ export function drawTree(context, program_state, model_transform) {
   const scales = [ratio, 1/ratio];
   const leaf_y_trans = trunk_y * 2 * leaf_y;
   const translations = [leaf_y_trans, ratio * leaf_y_trans];
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < height * 2; i++) {
     leaf_transform = Mat4.identity()
       .times(Mat4.translation(0, translations[i % 2], 0))
       .times(leaf_transform)

@@ -138,9 +138,9 @@ export class RestLane extends Lane {
     for (let i = 0; i < this.obstacle_count; i++) {
       let overlap = false;
       let start_offset = 0;
-      const obs_x_rad = 1; // need to change depending on obstacle
-      const obs_z_rad = 1; // need to change depending on obstacle
-      const z_offset = 0;
+      const obs_x_rad = 1.4; // need to change depending on obstacle
+      const obs_z_rad = 1.4; // need to change depending on obstacle
+      const z_offset = (Math.random() < 0.5) ? 2.6 : -2.6;
       do {
         overlap = false;
         const spawn_width = this.x_bound - obs_x_rad;
@@ -160,7 +160,8 @@ export class RestLane extends Lane {
 
   draw_obstacles(context, program_state) {
     this.obstacles.forEach((obs) => {
-      models.drawTree(context, program_state, obs.transform);
+      if (obs instanceof StationaryObstacle)
+        models.drawTree(context, program_state, obs.transform, obs.height);
     })
   }
 }

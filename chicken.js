@@ -24,7 +24,7 @@ export class Chicken {
     this.invincible = false;
     this.dead = false;
     this.x_rad = 0.6;
-    this.z_rad = 0.75;
+    this.z_rad = 1;
     this.x_pos = 0;
     this.z_pos = 0;
   }

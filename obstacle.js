@@ -38,7 +38,7 @@ export class Obstacle {
 export class MovingObstacle extends Obstacle {
   constructor(model_transform, x_bound, x_radius, z_radius, start_offset, z_offset = 0) {
     super(model_transform, x_bound, x_radius, z_radius, start_offset, z_offset);
-    this.speed = Math.random() * (20 - 10) + 10; // max speed = 30, min speed = 10
+    this.speed = Math.random() * (25 - 10) + 10; // max speed = 30, min speed = 10
     this.direction = Math.round(Math.random()) ? 1 : -1;
   }
 
@@ -97,7 +97,7 @@ export class MovingObstacle extends Obstacle {
 
 export class Car extends MovingObstacle {
   constructor(model_transform, x_bound, start_offset, z_offset = 0) {
-    super(model_transform, x_bound, 3, 2, start_offset, z_offset);
+    super(model_transform, x_bound, 3, 2.5, start_offset, z_offset);
     this.color_palettes = {
       0: [hex_color("#fd6e30"), hex_color("#ff4c2b")],
       1: [hex_color("#8077a2"), hex_color("#6b5c95")],
@@ -109,14 +109,23 @@ export class Car extends MovingObstacle {
 
 export class StationaryObstacle extends Obstacle {
   constructor(model_transform, x_bound, start_offset, z_offset) {
-    super(model_transform, x_bound, 1.4, 1.4, start_offset, z_offset);
+    super(model_transform, x_bound, 1.8, 1.8, start_offset, z_offset);
+    const rand = Math.random();
+    if (rand < 0.2)
+      this.height = 1;
+    else if (rand < 0.25)
+      this.height = 3;
+    else if (rand < 0.26)
+      this.height = 4 + Math.random() * 5;
+    else
+      this.height = 2;
   }
 
 
   on_chicken_collision(chicken) {
     const min_x = this.x_radius + chicken.x_rad;
     const min_z = this.z_radius + chicken.z_rad;
-    console.log(Math.abs(this.x_pos - chicken.x_pos) - min_x);
+    // console.log(Math.abs(this.x_pos - chicken.x_pos) - min_x);
     const chicken_x = chicken.x_pos;
     const chicken_z = chicken.z_pos;
     switch(chicken.angle) {

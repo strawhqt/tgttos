@@ -18,9 +18,9 @@ export class Tgttos extends Scene {
   init() {
     this.x_bound = 30; // how far left and right player can move
     this.z_bound = -100;
-    this.chicken = new Chicken(20, -100);
+    this.chicken = new Chicken(23, -100);
     this.camera_z_bound = -100;
-    this.lane_depth = 5; // how wide each lane is (in terms of z)
+    this.lane_depth = 4; // how wide each lane is (in terms of z)
     this.chunks_rendered = 1;
     this.lane_transform = Mat4.identity().times(Mat4.scale(this.x_bound, 1, this.lane_depth))
       .times(Mat4.translation(0, -2, 0));
@@ -75,7 +75,9 @@ export class Tgttos extends Scene {
 
     const t = program_state.animation_time / 1000;
     const dt = program_state.animation_delta_time / 1000;
-
+    if (dt > 0.02) {
+      console.log(dt)
+    }
     // move chicken
     this.chicken.handle_movement(t, dt);
 
