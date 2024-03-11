@@ -20,6 +20,8 @@ export class Chicken {
     this.start_move_time = 0;
     this.tweak_angle = 0;
     this.eggs = [];
+    this.active_egg_count = 0;
+    this.max_eggs = 3;
     this.height = 0;
     this.invincible = false;
     this.dead = false;

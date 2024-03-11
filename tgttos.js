@@ -11,8 +11,8 @@ const {
 export class Tgttos extends Scene {
   constructor() {
     super();
-    this.init();
     this.text_canvas = new TextCanvas();
+    this.init();
   }
 
   init() {
@@ -42,6 +42,7 @@ export class Tgttos extends Scene {
     }
     this.highlight = false;
     this.score = 0;
+    this.text_canvas.score = -1;
   }
 
   make_control_panel() {
@@ -51,15 +52,17 @@ export class Tgttos extends Scene {
     this.key_triggered_button("Back", ["s"], () => this.chicken.moving_back = true, '#6E6460', () => this.chicken.moving_back = false);
     this.key_triggered_button("Right", ["d"], () => this.chicken.moving_right = true, '#6E6460', () => this.chicken.moving_right = false);
     this.key_triggered_button("Egg", [" "], () => {
-      if (!this.chicken.dead) {
+      if (!this.chicken.dead && this.chicken.active_egg_count < this.chicken.max_eggs) {
         const egg_transform = Mat4.translation(this.chicken.x_pos, 0, -this.chicken.z_pos);
         this.chicken.eggs.push(egg_transform);
         this.chicken.eggs = this.chicken.eggs.slice(-10);
-        const speed_change = 20;
+        const speed_change = 30;
         this.chicken.speed += speed_change;
+        this.chicken.active_egg_count += 1;
         setTimeout(() => {
-          this.chicken.speed = Math.max(this.chicken.speed - 20, this.chicken.min_speed);
-        }, 500)
+          this.chicken.speed = Math.max(this.chicken.speed - speed_change, this.chicken.min_speed);
+          this.chicken.active_egg_count = Math.max(0, this.chicken.active_egg_count - 1);
+        }, 300)
     }
     }, '#6E6460');
     this.key_triggered_button("highlight checked lanes", ["h"], () => this.highlight = !this.highlight, '#6E6460');
@@ -116,7 +119,7 @@ export class Tgttos extends Scene {
 
     const draw_toast = x === 0 && z === 0 && !this.chicken.dead;
     this.text_canvas.handleCanvas
-      (this.score, draw_toast, "WASD to move!", this.chicken.dead, () => this.init());
+      (this.score, draw_toast, "WASD to move!", this.chicken.dead, () => this.init(), this.chicken.active_egg_count, this.chicken.max_eggs);
 
 
     // models.drawScore(context, program_state, this.chicken.z_bound, this.score.toString())
