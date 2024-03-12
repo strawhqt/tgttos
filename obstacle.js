@@ -145,10 +145,8 @@ export class StationaryObstacle extends Obstacle {
         const dist = Math.sqrt(Math.pow(chicken_old_z - z, 2) + Math.pow(chicken_old_x - x, 2));
         corner_dists.push({corner: i, dist: dist});
       }
-      function custom_compare(a, b) {
-        return a.dist - b.dist;
-      }
-      corner_dists.sort(custom_compare);
+
+      corner_dists.sort((a, b) => {return a.dist - b.dist});
       const corner_1 = corner_dists[0].corner;
       const corner_2 = corner_dists[1].corner;
       let edge = -1;

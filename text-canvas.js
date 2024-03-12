@@ -2,6 +2,10 @@ export class TextCanvas {
   constructor() {
     this.width = 1080;
     this.height = 600;
+    const font = new FontFace("Lilita One", "url('./assets/LilitaOne-Regular.ttf')")
+    document.fonts.add(font);
+    this.font_ready = false;
+    font.load().then(() => this.font_ready = true)
 
     const button = document.createElement("button");
     const button_wrapper = document.createElement("div");
@@ -62,6 +66,7 @@ export class TextCanvas {
   }
 
   handleCanvas(score, draw_toast, toast, dead, dead_callback, eggs, max_eggs) {
+    if (!this.font_ready) return;
     // restarted after death
     if (this.death_drawn && !dead) {
       this.score = -1;
