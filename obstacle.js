@@ -126,33 +126,72 @@ export class StationaryObstacle extends Obstacle {
     const min_x = this.x_radius + chicken.x_rad;
     const min_z = this.z_radius + chicken.z_rad;
     // console.log(Math.abs(this.x_pos - chicken.x_pos) - min_x);
-    const chicken_x = chicken.x_pos;
-    const chicken_z = chicken.z_pos;
-    switch(chicken.angle) {
-      case 0:             // chicken moving forward
-        chicken.z_pos = this.z_pos - min_z;
-        break;
-      case Math.PI / 2:   // chicken moving left
-        chicken.x_pos = this.x_pos + min_x;
-        break;
-      case -Math.PI / 2:  // chicken moving right
-        chicken.x_pos = this.x_pos - min_x;
-        break;
-      case Math.PI:       // chicken moving down
-        chicken.z_pos = this.z_pos + min_z;
-        break;
-    }
 
     const left = chicken.moving_left > chicken.moving_right;
     const right = chicken.moving_left < chicken.moving_right;
     const down = chicken.angle === Math.PI;
     const up = chicken.angle === 0;
-    if (right && (down || up) || left && (down || up)) {
-      const chicken_prev_x = chicken.transform[0][3];
-      const chicken_prev_z = -chicken.transform[2][3];
-      // parametric equation from two points
-      // find first intersection edge
-      // if left or right edge, act accordingly
+
+    if (right && (down || up) || left && (down || up)) { // if diagonal, use more advanced edge detection
+      const chicken_old_x = chicken.transform[0][3];
+      const chicken_old_z = -chicken.transform[2][3];
+      // TL, TR, BL, BR
+      const corner_x = [this.x_pos - this.x_radius, this.x_pos + this.x_radius, this.x_pos - this.x_radius, this.x_pos + this.x_radius];
+      const corner_z = [this.z_pos + this.z_radius, this.z_pos + this.z_radius, this.z_pos - this.z_radius, this.z_pos - this.z_radius]
+      let corner_dists = [];
+      for (let i = 0; i < 4; i++) {
+        const x = corner_x[i];
+        const z = corner_z[i];
+        const dist = Math.sqrt(Math.pow(chicken_old_z - z, 2) + Math.pow(chicken_old_x - x, 2));
+        corner_dists.push({corner: i, dist: dist});
+      }
+      function custom_compare(a, b) {
+        return a.dist - b.dist;
+      }
+      corner_dists.sort(custom_compare);
+      const corner_1 = corner_dists[0].corner;
+      const corner_2 = corner_dists[1].corner;
+      let edge = -1;
+      // edges: L, R, T, B
+      if ((corner_1 === 0 || corner_1 === 1) && (corner_2 === 0 || corner_2 === 1))
+        edge = 2; // top edge
+      if ((corner_1 === 0 || corner_1 === 2) && (corner_2 === 0 || corner_2 === 2))
+        edge = 0; // left edge
+      if ((corner_1 === 1 || corner_1 === 3) && (corner_2 === 1 || corner_2 === 3))
+        edge = 1; // right edge
+      if ((corner_1 === 2 || corner_1 === 3) && (corner_2 === 2 || corner_2 === 3))
+        edge = 3; // bottom edge
+      switch(edge) {
+        case 0: // left edge
+          chicken.x_pos = this.x_pos - min_x;
+          break;
+        case 1: // right edge
+          chicken.x_pos = this.x_pos + min_x;
+          break;
+        case 2: // top edge
+          chicken.z_pos = this.z_pos + min_z;
+          break;
+        case 3: // bottom edge
+          chicken.z_pos = this.z_pos - min_z;
+          break;
+      }
+      // const edges = ["left", "right", "top", "bottom"]
+      // console.log(edges[edge])
+    } else {
+      switch(chicken.angle) {
+        case 0:             // chicken moving forward
+          chicken.z_pos = this.z_pos - min_z;
+          break;
+        case Math.PI / 2:   // chicken moving left
+          chicken.x_pos = this.x_pos + min_x;
+          break;
+        case -Math.PI / 2:  // chicken moving right
+          chicken.x_pos = this.x_pos - min_x;
+          break;
+        case Math.PI:       // chicken moving down
+          chicken.z_pos = this.z_pos + min_z;
+          break;
+      }
     }
 
 

@@ -94,7 +94,7 @@ export class Tgttos extends Scene {
     this.chicken.z_bound = Math.max(this.chicken.z_bound, z - this.lane_depth);
     this.camera_z_bound = Math.max(this.camera_z_bound + this.camera_speed * dt, z);
     if (z > 0)
-      this.camera_speed = 2;
+      this.camera_speed = 3;
     if (this.camera_z_bound - z > 10)
       this.chicken.dead = true;
 
