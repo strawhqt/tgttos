@@ -164,5 +164,11 @@ export class RestLane extends Lane {
         models.drawTree(context, program_state, obs.transform, obs.height);
     })
   }
+}
+
+export class FirstLane extends Lane {
+  constructor(model_transform, lane_width, lane_depth) {
+    super(model_transform, color(0, 0, 0, 1), lane_width, lane_depth);
+  }
 
 }

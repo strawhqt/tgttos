@@ -1,6 +1,6 @@
 import {defs, tiny} from './examples/common.js';
 import {Text_Line} from "./examples/text-demo.js";
-import {Road} from "./lane.js";
+import {RestLane, Road} from "./lane.js";
 
 const {
   Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene, Texture,
@@ -15,7 +15,7 @@ const shapes = {
 }
 
 const materials = {
-  plastic: new Material(new defs.Phong_Shader(),
+  car: new Material(new defs.Phong_Shader(),
     {ambient: 1, diffusivity: .6, color: hex_color("#ffffff")}),
   cube: new Material(new defs.Phong_Shader(),
     {ambient: 0.9, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
@@ -37,6 +37,10 @@ const materials = {
     {ambient: 0.8, diffusivity: 1, specularity:0, color: hex_color("#bad935")}),
   leaf_dark: new Material(new defs.Phong_Shader(),
     {ambient: 0.8, diffusivity: 1, specularity:0, color: hex_color("#a7c525")}),
+  fence_post: new Material(new defs.Phong_Shader(),
+    {ambient: 1, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
+  fence_link: new Material(new defs.Phong_Shader(),
+    {ambient: 1, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
 }
 
 
@@ -182,69 +186,104 @@ export function drawCar(context, program_state, model_transform, color1 = hex_co
   const wheel_back_left_transform = Mat4.translation(-0.5 * length, -height * 2.5, -0.7 * width).times(wheel_transform);
   const wheel_back_left_aux_transform = wheel_back_left_transform.times(Mat4.scale(0.33, 0.33, 1.01));
 
-  shapes.cube.draw(context, program_state, model_transform.times(body_transform), materials.plastic.override({color: color1}));
-  shapes.cube.draw(context, program_state, model_transform.times(middle_body_transform), materials.plastic.override({color: color2}));
-  shapes.cube.draw(context, program_state, model_transform.times(light_transform_right), materials.plastic.override({color: hex_color("#ffffff")}));
-  shapes.cube.draw(context, program_state, model_transform.times(light_transform_left), materials.plastic.override({color: hex_color("#ffffff")}));
-  shapes.cube.draw(context, program_state, model_transform.times(lower_body_1), materials.plastic.override({color: color2}));
-  shapes.cube.draw(context, program_state, model_transform.times(lower_body_2_left), materials.plastic.override({color: hex_color("#3b3e3f")}));
-  shapes.cube.draw(context, program_state, model_transform.times(lower_body_2_right), materials.plastic.override({color: hex_color("#3b3e3f")}));
-  shapes.cube.draw(context, program_state, model_transform.times(upper_body_transform), materials.plastic.override({color: hex_color("#ffffff")}));
-  shapes.cube.draw(context, program_state, model_transform.times(mirror_transform), materials.plastic.override({color: color2}));
-  shapes.cube.draw(context, program_state, model_transform.times(side_window_transform), materials.plastic.override({color: hex_color("#000000")}));
-  shapes.cube.draw(context, program_state, model_transform.times(front_back_window_transform), materials.plastic.override({color: hex_color("#000000")}));
-  shapes.cube.draw(context, program_state, model_transform.times(wheel_front_right_transform), materials.plastic.override({color: hex_color("#000000")}));
-  shapes.cube.draw(context, program_state, model_transform.times(wheel_front_left_transform), materials.plastic.override({color: hex_color("#000000")}));
-  shapes.cube.draw(context, program_state, model_transform.times(wheel_back_right_transform), materials.plastic.override({color: hex_color("#000000")}));
-  shapes.cube.draw(context, program_state, model_transform.times(wheel_back_left_transform), materials.plastic.override({color: hex_color("#000000")}));
-  shapes.cube.draw(context, program_state, model_transform.times(wheel_front_right_aux_transform), materials.plastic.override({color: hex_color("#ffffff")}));
-  shapes.cube.draw(context, program_state, model_transform.times(wheel_front_left_aux_transform), materials.plastic.override({color: hex_color("#ffffff")}));
-  shapes.cube.draw(context, program_state, model_transform.times(wheel_back_right_aux_transform), materials.plastic.override({color: hex_color("#ffffff")}));
-  shapes.cube.draw(context, program_state, model_transform.times(wheel_back_left_aux_transform), materials.plastic.override({color: hex_color("#ffffff")}));
+  shapes.cube.draw(context, program_state, model_transform.times(body_transform), materials.car.override({color: color1}));
+  shapes.cube.draw(context, program_state, model_transform.times(middle_body_transform), materials.car.override({color: color2}));
+  shapes.cube.draw(context, program_state, model_transform.times(light_transform_right), materials.car.override({color: hex_color("#ffffff")}));
+  shapes.cube.draw(context, program_state, model_transform.times(light_transform_left), materials.car.override({color: hex_color("#ffffff")}));
+  shapes.cube.draw(context, program_state, model_transform.times(lower_body_1), materials.car.override({color: color2}));
+  shapes.cube.draw(context, program_state, model_transform.times(lower_body_2_left), materials.car.override({color: hex_color("#3b3e3f")}));
+  shapes.cube.draw(context, program_state, model_transform.times(lower_body_2_right), materials.car.override({color: hex_color("#3b3e3f")}));
+  shapes.cube.draw(context, program_state, model_transform.times(upper_body_transform), materials.car.override({color: hex_color("#ffffff")}));
+  shapes.cube.draw(context, program_state, model_transform.times(mirror_transform), materials.car.override({color: color2}));
+  shapes.cube.draw(context, program_state, model_transform.times(side_window_transform), materials.car.override({color: hex_color("#000000")}));
+  shapes.cube.draw(context, program_state, model_transform.times(front_back_window_transform), materials.car.override({color: hex_color("#000000")}));
+  shapes.cube.draw(context, program_state, model_transform.times(wheel_front_right_transform), materials.car.override({color: hex_color("#000000")}));
+  shapes.cube.draw(context, program_state, model_transform.times(wheel_front_left_transform), materials.car.override({color: hex_color("#000000")}));
+  shapes.cube.draw(context, program_state, model_transform.times(wheel_back_right_transform), materials.car.override({color: hex_color("#000000")}));
+  shapes.cube.draw(context, program_state, model_transform.times(wheel_back_left_transform), materials.car.override({color: hex_color("#000000")}));
+  shapes.cube.draw(context, program_state, model_transform.times(wheel_front_right_aux_transform), materials.car.override({color: hex_color("#ffffff")}));
+  shapes.cube.draw(context, program_state, model_transform.times(wheel_front_left_aux_transform), materials.car.override({color: hex_color("#ffffff")}));
+  shapes.cube.draw(context, program_state, model_transform.times(wheel_back_right_aux_transform), materials.car.override({color: hex_color("#ffffff")}));
+  shapes.cube.draw(context, program_state, model_transform.times(wheel_back_left_aux_transform), materials.car.override({color: hex_color("#ffffff")}));
 }
 
 export function drawLane(context, program_state, lane_type, x_bound, z_depth, model_transform, color, before_rest_lane) {
   if (lane_type instanceof Road) {
-    // only add dividers if it isn't before a rest lane
-    if (!before_rest_lane) {
-      const lane_divider_separator = 5; // how far apart each divider is
-      const lane_divider_length = 2; // how wide each lane divider is
-      let first_lane_divider = true;
-      let lane_divider_transform = Mat4.identity()
-        .times(Mat4.translation(-x_bound + lane_divider_length / 2, 0, -z_depth))
-        .times(Mat4.translation(0, 0, model_transform[2][3]))
-        .times(Mat4.scale(lane_divider_length / x_bound / 2, 0.995, 0.1)) // print half a divider at a time
-        .times(Mat4.translation(0, 0, -model_transform[2][3]))
-        .times(model_transform)
-
-      for (let i = -x_bound; i + lane_divider_length < x_bound; i += lane_divider_separator + lane_divider_length) {
-        // if first lane divider, we only draw half
-        if (first_lane_divider) {
-          shapes.cube.draw(context, program_state, lane_divider_transform, materials.ground.override(({color: hex_color("#7d8498")})));
-          first_lane_divider = false;
-        }
-        else {
-          shapes.cube.draw(context, program_state, lane_divider_transform, materials.ground.override(({color: hex_color("#7d8498")})));
-          lane_divider_transform = Mat4.translation(lane_divider_length, 0, 0).times(lane_divider_transform);
-          shapes.cube.draw(context, program_state, lane_divider_transform, materials.ground.override(({color: hex_color("#7d8498")})));
-        }
-        lane_divider_transform = Mat4.translation(lane_divider_separator, 0, 0).times(lane_divider_transform);
-      }
-    }
-    // draw the actual road
-    shapes.cube.draw(context, program_state, model_transform, materials.ground.override({color: color}))
+    drawRoad(context, program_state, x_bound, z_depth, model_transform, color, before_rest_lane);
   }
-  else {
-    shapes.cube.draw(context, program_state, model_transform, materials.ground.override({color: color}));
+  else if (lane_type instanceof RestLane) {
+    drawRestLane(context, program_state, model_transform, color);
+  }
+  else { // is first lane
+    drawFirstLane(context, program_state, x_bound, z_depth, model_transform);
   }
 }
 
-export function drawFirstLane(context, program_state, lane_type, x_bound, z_depth, model_transform, color, before_rest_lane) {
-  const lane_transform = model_transform
-    .times(Mat4.translation(0, 0, -5))
-    .times(backAndForth(Mat4.scale(0, 0, 3), 0, 0, 1))
+export function drawRoad(context, program_state, x_bound, z_depth, model_transform, color, before_rest_lane) {
+  // only add dividers if it isn't before a rest lane
+  if (!before_rest_lane) {
+    const lane_divider_separator = 5; // how far apart each divider is
+    const lane_divider_length = 2; // how wide each lane divider is
+    let first_lane_divider = true;
+    let lane_divider_transform = Mat4.identity()
+      .times(Mat4.translation(-x_bound + lane_divider_length / 2, 0, -z_depth))
+      .times(Mat4.translation(0, 0, model_transform[2][3]))
+      .times(Mat4.scale(lane_divider_length / x_bound / 2, 0.995, 0.1)) // print half a divider at a time
+      .times(Mat4.translation(0, 0, -model_transform[2][3]))
+      .times(model_transform)
 
-  shapes.cube.draw(context, program_state, lane_transform, materials.ground.override({color: color}));
+    for (let i = -x_bound; i + lane_divider_length < x_bound; i += lane_divider_separator + lane_divider_length) {
+      // if first lane divider, we only draw half
+      if (first_lane_divider) {
+        shapes.cube.draw(context, program_state, lane_divider_transform, materials.ground.override(({color: hex_color("#7d8498")})));
+        first_lane_divider = false;
+      } else {
+        shapes.cube.draw(context, program_state, lane_divider_transform, materials.ground.override(({color: hex_color("#7d8498")})));
+        lane_divider_transform = Mat4.translation(lane_divider_length, 0, 0).times(lane_divider_transform);
+        shapes.cube.draw(context, program_state, lane_divider_transform, materials.ground.override(({color: hex_color("#7d8498")})));
+      }
+      lane_divider_transform = Mat4.translation(lane_divider_separator, 0, 0).times(lane_divider_transform);
+    }
+  }
+  // draw the actual road
+  shapes.cube.draw(context, program_state, model_transform, materials.ground.override({color: color}));
+}
+
+export function drawRestLane(context, program_state, model_transform, color) {
+  shapes.cube.draw(context, program_state, model_transform, materials.ground.override({color: color}));
+}
+
+let logged = false;
+export function drawFirstLane(context, program_state, x_bound, z_depth, model_transform) {
+  let first_lane_transform = Mat4.translation(0, 0, 2 * z_depth).times(model_transform);
+  shapes.cube.draw(context, program_state, model_transform, materials.ground.override({color: hex_color('#ace065')}));
+  shapes.cube.draw(context, program_state, first_lane_transform, materials.ground.override({color: hex_color('#87b44b')}));
+
+  const post_height = 4;
+  const post_width = 0.5;
+  const post_depth = 0.5;
+  const link_height = post_height / 12;
+  const link_width = 4.5;
+  const link_depth = 0.5 * post_depth;
+
+  let post_transform = Mat4.identity()
+    .times(Mat4.translation(-x_bound + post_width, 0, -0.5 * z_depth))
+    .times(backAndForth(Mat4.scale(post_width / x_bound, post_height, post_depth / z_depth), 0, 2, -2 * z_depth))
+    .times(first_lane_transform);
+
+  let link_transform = Mat4.identity()
+    .times(Mat4.translation(-x_bound + post_width * 2, 0.5 * post_height, -0.5 * z_depth))
+    .times(backAndForth(Mat4.scale(link_width / x_bound, link_height, link_depth / z_depth), 0, 2, -2 * z_depth))
+    .times(first_lane_transform);
+
+  for (let i = -x_bound; i < x_bound - post_width; i += post_width) {
+    shapes.cube.draw(context, program_state, link_transform, materials.fence_link.override({color: hex_color("#442c0f")}));
+    shapes.cube.draw(context, program_state, Mat4.translation(0, 0.33 * post_height, 0).times(link_transform), materials.fence_link.override({color: hex_color("#442c0f")}));
+    shapes.cube.draw(context, program_state, post_transform, materials.fence_post.override({color: hex_color("#221407")}));
+
+    link_transform = Mat4.translation(2 * post_width, 0, 0).times(link_transform);
+    post_transform = Mat4.translation(link_width, 0, 0).times(post_transform);
+  }
 }
 
 export function drawEgg(context, program_state, model_transform) {
