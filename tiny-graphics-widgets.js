@@ -112,7 +112,7 @@ const Controls_Widget = widgets.Controls_Widget =
                 ".dropdown a:hover { background: #f1f1f1 }",
                 ".controls-widget button { background: #303030; color: white; padding: 3px; border-radius:5px; \
                                            transition: background .3s, transform .3s }",
-                ".controls-widget button:hover, button:focus { transform: scale(1.1); color:#FFFFFF }",
+                // ".controls-widget button:hover, button:focus { transform: scale(1.1); color:#FFFFFF }",
                 ".link { text-decoration:underline; cursor: pointer }",
                 ".show { transform: scaleY(1); height:200px; overflow:auto }",
                 ".hide { transform: scaleY(0); height:0px; overflow:hidden  }"];

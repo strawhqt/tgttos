@@ -11,7 +11,7 @@ const {
 export class Tgttos extends Scene {
   constructor() {
     super();
-    this.text_canvas = new TextCanvas();
+    this.text_canvas = new TextCanvas(() => this.init(0), () => this.paused = !this.paused);
     this.init(0);
   }
 
@@ -47,7 +47,7 @@ export class Tgttos extends Scene {
     this.score = 0;
     this.text_canvas.score = -1;
 
-    this.pause = false;
+    this.paused = false;
     this.level = level;
   }
 
@@ -58,7 +58,7 @@ export class Tgttos extends Scene {
     this.key_triggered_button("Back", ["s"], () => this.chicken.moving_back = true, '#6E6460', () => this.chicken.moving_back = false);
     this.key_triggered_button("Right", ["d"], () => this.chicken.moving_right = true, '#6E6460', () => this.chicken.moving_right = false);
     this.key_triggered_button("Egg", [" "], () => {
-      if (!this.pause && !this.chicken.dead && this.chicken.active_egg_count < this.chicken.max_eggs) {
+      if (!this.paused && !this.chicken.dead && this.chicken.active_egg_count < this.chicken.max_eggs) {
         const egg_transform = Mat4.translation(this.chicken.x_pos, 0, -this.chicken.z_pos);
         this.chicken.eggs.push(egg_transform);
         this.chicken.eggs = this.chicken.eggs.slice(-10);
@@ -77,7 +77,11 @@ export class Tgttos extends Scene {
     });
     this.key_triggered_button("restart", ["r"], () => this.init(this.level));
     this.key_triggered_button("invincibility", ["i"], () => this.chicken.invincible = !this.chicken.invincible);
-    this.key_triggered_button("pause", ["p"], () => this.pause = !this.pause);
+    this.key_triggered_button("pause", ["p"], () => {
+      this.paused = !this.paused;
+      const button = document.getElementById("pause");
+      button.textContent = (button.textContent === "⏸️") ? "▶️" : "⏸️";
+    } );
     this.key_triggered_button("toggle level/endless", ["l"], () => {
       if (this.level === 0) {
         this.init(1);
@@ -99,11 +103,11 @@ export class Tgttos extends Scene {
     const t = program_state.animation_time / 1000;
     const dt = program_state.animation_delta_time / 1000;
 
-    if (this.chicken.dead || this.pause)
+    if (this.chicken.dead || this.paused)
       this.camera_speed = 0;
 
     // move chicken
-    if (!this.pause)
+    if (!this.paused)
       this.chicken.handle_movement(t, dt);
 
     // position of the chicken
@@ -136,9 +140,9 @@ export class Tgttos extends Scene {
 
 
     const draw_toast = x === 0 && z === 0 && !this.chicken.dead;
-    // const upper_left_text = this.level === 0 ? this.score : `Level: ${this.score}`;
     this.text_canvas.handleCanvas
-      (this.score, draw_toast, "WASD to move!", this.chicken.dead, () => this.init(), this.chicken.active_egg_count, this.chicken.max_eggs);
+      (this.score, draw_toast, "WASD to move!", this.chicken.dead, this.chicken.active_egg_count,
+        this.chicken.max_eggs, this.paused);
 
 
     // models.drawScore(context, program_state, this.chicken.z_bound, this.score.toString())
@@ -150,7 +154,7 @@ export class Tgttos extends Scene {
     this.lanes.forEach((lane, i) => {
       const check_chicken = (i === current_chicken_lane_index || i === current_chicken_lane_index - 1);
       const highlight_lane = this.highlight && check_chicken;
-      if (!this.pause)
+      if (!this.paused)
         lane.handle_obstacles(dt);
       if (check_chicken) lane.check_chicken_collision(this.chicken);
       lane.draw(context, program_state, highlight_lane);
@@ -188,6 +192,5 @@ export class Tgttos extends Scene {
         }
       }
     }
-
   }
 }

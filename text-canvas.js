@@ -1,5 +1,5 @@
 export class TextCanvas {
-  constructor() {
+  constructor(death_callback, paused_callback) {
     this.width = 1080;
     this.height = 600;
     const font = new FontFace("Lilita One", "url('./assets/LilitaOne-Regular.ttf')")
@@ -7,15 +7,15 @@ export class TextCanvas {
     this.font_ready = false;
     font.load().then(() => this.font_ready = true)
 
-    const button = document.createElement("button");
-    const button_wrapper = document.createElement("div");
+    const restart_button = document.createElement("button");
+    const restart_button_wrapper = document.createElement("div");
+    const pause_button = document.createElement("button");
     const score_canvas = document.createElement("canvas");
     const death_canvas = document.createElement("canvas");
     const egg_canvas = document.createElement("canvas");
     const toast_canvas = document.createElement("canvas");
 
-    const x_dim = 600;
-    const y_dim = 788;
+
     const egg_image = new Image();
     egg_image.src = "./assets/egg.png";
     this.egg_image = egg_image;
@@ -26,17 +26,38 @@ export class TextCanvas {
     element.append(toast_canvas);
 
 
-    element.append(button_wrapper);
-    button_wrapper.append(button);
-    button_wrapper.style.position = "absolute";
-    button_wrapper.style.textAlign = "center";
-    button_wrapper.style.width = `${this.width}px`;
-    button_wrapper.style.height = `${this.height}px`;
-    this.button = button;
-    this.button.textContent = "Restart"
-    this.button.style.marginTop = `${this.height - 60}px`;
-    this.button.disabled = true;
-    this.button.hidden = true;
+    element.append(restart_button_wrapper);
+    restart_button_wrapper.append(restart_button);
+    restart_button_wrapper.style.position = "absolute";
+    restart_button_wrapper.style.textAlign = "center";
+    restart_button_wrapper.style.width = `${this.width}px`;
+    restart_button_wrapper.style.height = `${this.height}px`;
+    this.restart_button = restart_button;
+    this.restart_button.textContent = "Restart"
+    this.restart_button.style.marginTop = `${this.height - 60}px`;
+    this.restart_button.hidden = true;
+    this.restart_button.onclick = death_callback;
+    this.restart_button.type = "button";
+
+
+    restart_button_wrapper.append(pause_button);
+    this.pause_button = pause_button;
+    this.pause_button.textContent = "⏸️"
+    this.pause_button.style.marginTop = `5px`;
+    this.pause_button.style.marginLeft = `${this.width - 50}px`;
+    this.pause_button.style.background = "none";
+    this.pause_button.style.border = "none";
+    this.pause_button.style.fontSize = "2em";
+    this.pause_button.style.right = "2em";
+
+    this.pause_button.id = "pause";
+
+    this.pause_button.hidden = false;
+    this.pause_button.onclick = () => {
+      paused_callback();
+      this.pause_button.textContent = (this.pause_button.textContent === "⏸️") ? "▶️" : "⏸️";
+    }
+    this.pause_button.type = "button";
 
     this.score_ctx = score_canvas.getContext("2d");
     this.death_ctx = death_canvas.getContext("2d");
@@ -65,15 +86,15 @@ export class TextCanvas {
     this.toast_drawn = false;
   }
 
-  handleCanvas(score, draw_toast, toast, dead, dead_callback, eggs, max_eggs) {
+  handleCanvas(score, draw_toast, toast, dead, eggs, max_eggs, paused) {
     if (!this.font_ready) return;
     // restarted after death
     if (this.death_drawn && !dead) {
       this.score = -1;
       this.toast_drawn = false;
       this.death_drawn = false;
-      this.button.disabled = true;
-      this.button.hidden = true;
+      this.restart_button.hidden = true;
+      this.pause_button.hidden = false;
       this.clearCanvas(this.death_ctx);
     }
 
@@ -101,7 +122,7 @@ export class TextCanvas {
       this.clearCanvas(this.egg_ctx);
       this.clearCanvas(this.toast_ctx);
       this.death_drawn = true;
-      this.drawDeath(this.score, dead_callback)
+      this.drawDeath(this.score)
     }
   }
 
@@ -138,7 +159,7 @@ export class TextCanvas {
     this.toast_drawn = true;
   }
 
-  drawDeath(score, callback) {
+  drawDeath(score) {
     const x = this.width / 2;
     let y = this.height / 2;
     this.death_ctx.textAlign = "center";
@@ -147,9 +168,8 @@ export class TextCanvas {
     this.brawlShadow(this.death_ctx, "You died!", x, y)
     y += 60;
     this.brawlShadow(this.death_ctx, score, x, y, 3, 2);
-    this.button.disabled = false;
-    this.button.hidden = false;
-    this.button.onclick = callback;
+    this.restart_button.hidden = false;
+    this.pause_button.hidden = true;
   }
 
   drawEggs(eggs, max_eggs) {
