@@ -15,7 +15,16 @@ export class Tgttos extends Scene {
     this.init();
   }
 
-  init(level = 0, min_camera_speed = 4, max_camera_speed = 12, camera_speed_delta = 25, max_obstacle_speed = 25, min_obstacle_speed = 10, max_moving_obstacle_count = 2, max_stationary_obstacle_count = 5, rest_lane_chance = 0.3) {
+  init(level = 0) {
+    const min_camera_speed = 4 * Math.pow(1.25, level);
+    const max_camera_speed = 12 * Math.pow(1.25, level);
+    const camera_speed_delta = 25 * Math.pow(0.9, level);
+    const max_obstacle_speed = 25 * Math.pow(1.2, level);
+    const min_obstacle_speed = 10 * Math.pow(1.2, level);
+    const max_moving_obstacle_count = 2 * Math.pow(1.1, level);
+    const max_stationary_obstacle_count = 5 * Math.pow(1.1, level);
+    const rest_lane_chance = 0.3 * Math.pow(0.8, level);
+
     this.x_bound = 30; // how far left and right player can move
     this.lane_depth = 4; // how wide each lane is (in terms of z)
     this.chicken_min_speed = 40;
@@ -38,7 +47,6 @@ export class Tgttos extends Scene {
     this.lane_transform = Mat4.identity().times(Mat4.scale(this.x_bound, 1, this.lane_depth))
       .times(Mat4.translation(0, -2, 0));
     this.lane_colors = [hex_color('#ace065'), hex_color('#a0d15a')];
-
 
     this.lanes = []
     this.lanes.push(new FirstLane(this.lane_transform, this.x_bound, this.lane_depth));
@@ -187,19 +195,10 @@ export class Tgttos extends Scene {
         this.printed_level_ending = true;
       }
 
-
+      // if they beat the level
       if (z > this.chunks_rendered * 10 * 2 * this.lane_depth + 6 * 2 * this.lane_depth) { // if they beat the game
         console.log(`Level: ${this.level + 1}`);
-        this.init(this.level + 1,
-          this.min_camera_speed * 1.25,
-          this.max_camera_speed * 1.25,
-          this.camera_speed_delta * 0.8,
-          this.max_obstacle_speed * 1.2,
-          this.min_obstacle_speed * 1.2,
-          this.max_moving_obstacle_count * 1.1,
-          this.max_stationary_obstacle_count * 1.1,
-          this.rest_lane_chance * 0.75,
-        );
+        this.init(this.level + 1);
       }
     }
     else {
