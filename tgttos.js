@@ -1,6 +1,6 @@
 import {defs, tiny} from './examples/common.js';
 import * as models from './models.js';
-import {Lane, Road, RestLane, FirstLane} from "./lane.js";
+import {Lane, Road, RestLane, FirstLane, FinishLane} from "./lane.js";
 import {Chicken} from "./chicken.js";
 import {TextCanvas} from "./text-canvas.js";
 
@@ -69,6 +69,7 @@ export class Tgttos extends Scene {
 
     this.level = level;
     this.printed_level_ending = false;
+    this.printed_next_level = false;
   }
 
   make_control_panel() {
@@ -133,8 +134,11 @@ export class Tgttos extends Scene {
     const z = -this.chicken.transform[2][3]; // +z into the page
     this.chicken.z_bound = Math.max(this.chicken.z_bound, z - this.lane_depth);
     this.camera_z_bound = Math.max(this.camera_z_bound + this.camera_speed * dt, z);
+
     if (z > 0)
       this.camera_speed = Math.min(this.max_camera_speed, this.min_camera_speed + z / (this.lane_depth * 2 * this.camera_speed_delta));
+    if (z > this.chunks_rendered * 10 * 2 * this.lane_depth + 5 * 2 * this.lane_depth)
+      this.camera_speed = 0;
     if (this.camera_z_bound - z > 10)
       this.chicken.dead = true;
 
@@ -188,17 +192,23 @@ export class Tgttos extends Scene {
     if (this.level > 0 && this.chunks_rendered > this.level + 3) { // every level is ten lanes longer
       if (!this.printed_level_ending) {
         if (this.lanes.length > 1) this.lanes.at(-1).before_rest_lane = true;
-        for (let i = 0; i < 16; i++ ) {
-          this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound, this.lane_depth, true));
+        for (let i = 0; i < 5; i++ ) {
+          if (i === 1)
+            this.lanes.push(new FinishLane(this.lane_transform, this.x_bound, this.lane_depth))
+          else
+            this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound, this.lane_depth, true));
           this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
         }
         this.printed_level_ending = true;
       }
-
       // if they beat the level
-      if (z > this.chunks_rendered * 10 * 2 * this.lane_depth + 6 * 2 * this.lane_depth) { // if they beat the game
-        console.log(`Level: ${this.level + 1}`);
-        this.init(this.level + 1);
+      if (z > this.chunks_rendered * 10 * 2 * this.lane_depth + 7 * 2 * this.lane_depth) { // if they beat the game
+        setTimeout(() => {
+          if(!this.printed_next_level) {
+            this.init(this.level + 1);
+            this.printed_next_level = true;
+          }
+        }, 750)
       }
     }
     else {

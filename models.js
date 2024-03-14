@@ -1,6 +1,6 @@
 import {defs, tiny} from './examples/common.js';
 import {Text_Line} from "./examples/text-demo.js";
-import {RestLane, Road} from "./lane.js";
+import {FinishLane, RestLane, Road} from "./lane.js";
 
 const {
   Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene, Texture,
@@ -11,8 +11,13 @@ const shapes = {
   triangle: new defs.Triangle(),
   egg: new defs.Subdivision_Sphere(4),
   text: new Text_Line(8),
-
+  finish_cube: new defs.Cube(),
 }
+
+shapes.finish_cube.arrays.texture_coord.forEach(
+  (v, i, l) => l[i] = vec(v[0] * 6, v[1])
+);
+
 
 const materials = {
   car: new Material(new defs.Phong_Shader(),
@@ -29,7 +34,7 @@ const materials = {
     {ambient: 0.8, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
   text_image: new Material(new defs.Textured_Phong(1), {
     ambient: 1, diffusivity: 0, specularity: 0,
-    texture: new Texture("assets/text.png")
+    texture: new Texture("assets/text.png"),
   }),
   trunk: new Material(new defs.Phong_Shader(),
     {ambient: 0.8, diffusivity: .6, specularity:0, color: hex_color("#442c0f")}),
@@ -41,6 +46,11 @@ const materials = {
     {ambient: 1, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
   fence_link: new Material(new defs.Phong_Shader(),
     {ambient: 1, diffusivity: 1, specularity: 0, color: hex_color("#ffffff")}),
+  finish_line: new Material(new defs.Textured_Phong(), {
+    color: color(0, 0, 0, 1),
+    ambient: 1, diffusivity: 1, specularity: 0,
+    texture: new Texture("assets/checker.png"),
+  })
 }
 
 
@@ -214,6 +224,9 @@ export function drawLane(context, program_state, lane_type, x_bound, z_depth, mo
   else if (lane_type instanceof RestLane) {
     drawRestLane(context, program_state, model_transform, color);
   }
+  else if (lane_type instanceof FinishLane) {
+    drawFinish(context, program_state, model_transform);
+  }
   else { // is first lane
     drawFirstLane(context, program_state, x_bound, z_depth, model_transform);
   }
@@ -253,7 +266,6 @@ export function drawRestLane(context, program_state, model_transform, color) {
   shapes.cube.draw(context, program_state, model_transform, materials.ground.override({color: color}));
 }
 
-let logged = false;
 export function drawFirstLane(context, program_state, x_bound, z_depth, model_transform) {
   let first_lane_transform = Mat4.translation(0, 0, 2 * z_depth).times(model_transform);
   shapes.cube.draw(context, program_state, model_transform, materials.ground.override({color: hex_color('#ace065')}));
@@ -286,6 +298,10 @@ export function drawFirstLane(context, program_state, x_bound, z_depth, model_tr
     link_transform = Mat4.translation(2 * post_width, 0, 0).times(link_transform);
     post_transform = Mat4.translation(link_width, 0, 0).times(post_transform);
   }
+}
+
+export function drawFinish(context, program_state, model_transform) {
+  shapes.finish_cube.draw(context, program_state, model_transform, materials.finish_line);
 }
 
 export function drawEgg(context, program_state, model_transform) {

@@ -174,5 +174,10 @@ export class FirstLane extends Lane {
   constructor(model_transform, lane_width, lane_depth) {
     super(model_transform, color(0, 0, 0, 1), lane_width, lane_depth);
   }
+}
 
+export class FinishLane extends Lane {
+  constructor(model_transform, lane_width, lane_depth) {
+    super(model_transform, color(0, 0, 0, 1), lane_width, lane_depth);
+  }
 }
