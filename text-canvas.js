@@ -25,8 +25,6 @@ export class TextCanvas {
     element.append(death_canvas);
     element.append(egg_canvas);
     element.append(toast_canvas);
-
-
     element.append(restart_button_wrapper);
     restart_button_wrapper.append(restart_button);
     restart_button_wrapper.style.position = "absolute";
@@ -34,11 +32,19 @@ export class TextCanvas {
     restart_button_wrapper.style.width = `${this.width}px`;
     restart_button_wrapper.style.height = `${this.height}px`;
     this.restart_button = restart_button;
-    this.restart_button.textContent = "Restart"
+    this.restart_button.textContent = "Restart (r)";
     this.restart_button.style.marginTop = `${this.height - 60}px`;
-    this.restart_button.hidden = true;
+    this.restart_button.style.visibility = "hidden";
     this.restart_button.onclick = () => death_callback(this.level);
     this.restart_button.type = "button";
+    this.restart_button.style.fontFamily = "Lilita One, sans-serif";
+    this.restart_button.style.background = "rgba(83,159,190,0.94)";
+    this.restart_button.style.borderRadius = "10px";
+    this.restart_button.style.padding = "6px 12px 6px 12px";
+    this.restart_button.style.fontSize = "1.2em";
+    this.restart_button.style.cursor = "pointer";
+    this.restart_button.style.color = "#FFFFFF";
+    this.restart_button.style.border = "none";
 
 
     restart_button_wrapper.append(pause_button);
@@ -49,24 +55,15 @@ export class TextCanvas {
     this.pause_button.style.position = `absolute`;
     this.pause_button.style.right = `10px`;
     this.pause_button.style.top = `10px`;
-
-    this.pause_button.style.background = "rgba(255,255,255,0.31)";
+    this.pause_button.style.background = "rgba(255,255,255,0.30)";
     this.pause_button.style.borderRadius = "10px";
     this.pause_button.style.display = "flex";
     this.pause_button.style.alignItems = "center";
     this.pause_button.style.padding = "6px";
     this.pause_button.style.cursor = "pointer";
-
-
-
-
     this.pause_button.style.border = "none";
+    this.pause_button.style.visibility = "visible";
 
-
-
-    this.pause_button.id = "pause";
-
-    this.pause_button.hidden = false;
     this.pause_button.onclick = paused_callback;
     this.pause_button.type = "button";
 
@@ -91,14 +88,13 @@ export class TextCanvas {
     });
 
     this.score = -1;
-
     this.eggs = 0;
     this.death_drawn = false;
     this.toast_drawn = false;
+    this.level = 0;
   }
 
   handleCanvas(score, draw_toast, toast, dead, eggs, max_eggs, paused, level) {
-    this.pause_button.innerHTML = (paused) ? this.play_svg : this.pause_svg;
     if (!this.font_ready) return;
     // restarted after death
     if (this.death_drawn && !dead) {
@@ -106,20 +102,22 @@ export class TextCanvas {
       this.level = 0;
       this.toast_drawn = false;
       this.death_drawn = false;
-      this.restart_button.hidden = true;
-      this.pause_button.hidden = false;
+      this.restart_button.style.visibility = "hidden";
+      this.pause_button.style.visibility = "visible";
       this.clearCanvas(this.death_ctx);
     }
 
     if (!dead) {
+      this.pause_button.innerHTML = (paused) ? this.play_svg : this.pause_svg;
       if (this.score < score) {
         this.score = score;
-        if (!this.level)
+        if (!level)
           this.drawScore(this.score);
       }
       if (this.level !== level) {
         this.level = level;
-        this.drawScore(`Level ${this.level}`);
+        if (level)
+          this.drawScore(`Level ${this.level}`);
       }
 
       if (this.eggs !== eggs) {
@@ -186,8 +184,8 @@ export class TextCanvas {
     this.brawlShadow(this.death_ctx, "You died!", x, y)
     y += 60;
     this.brawlShadow(this.death_ctx, score, x, y, 3, 2);
-    this.restart_button.hidden = false;
-    this.pause_button.hidden = true;
+    this.restart_button.style.visibility = "visible";
+    this.pause_button.style.visibility = "hidden";
   }
 
   drawEggs(eggs, max_eggs) {

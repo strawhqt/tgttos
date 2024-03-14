@@ -65,6 +65,7 @@ export class Road extends Lane {
   obstacle_init() {
     this.obstacle_count = Math.floor(Math.random() * (this.max_obstacle_count + 1));
 
+    let attempts = 0;
     for (let i = 0; i < this.obstacle_count; i++) {
       let overlap = false;
       let start_offset = 0;
@@ -72,6 +73,7 @@ export class Road extends Lane {
       const obs_z_rad = 2; // need to change depending on obstacle
       const z_offset = 0;
       do {
+        attempts += 1;
         overlap = false;
         const spawn_width = this.x_bound - obs_x_rad;
         start_offset = Math.random() * 2 * spawn_width - spawn_width;
@@ -83,7 +85,8 @@ export class Road extends Lane {
           if (x_dist < min_x_dist && z_dist < min_z_dist)
             overlap = true;
         })
-      } while (overlap)
+      } while (overlap && attempts < 100)
+      if (attempts > 100) break;
       this.obstacles.push(new Car(this.lane_transform, this.x_bound, start_offset, z_offset, this.max_speed, this.min_speed));
     }
   }
