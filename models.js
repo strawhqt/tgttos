@@ -277,9 +277,11 @@ export function drawFirstLane(context, program_state, x_bound, z_depth, model_tr
     .times(first_lane_transform);
 
   for (let i = -x_bound; i < x_bound - post_width; i += post_width) {
-    shapes.cube.draw(context, program_state, link_transform, materials.fence_link.override({color: hex_color("#442c0f")}));
-    shapes.cube.draw(context, program_state, Mat4.translation(0, 0.33 * post_height, 0).times(link_transform), materials.fence_link.override({color: hex_color("#442c0f")}));
-    shapes.cube.draw(context, program_state, post_transform, materials.fence_post.override({color: hex_color("#221407")}));
+    const color = hex_color("#965f32");
+    const post_color = hex_color("#8a572e");
+    shapes.cube.draw(context, program_state, link_transform, materials.fence_link.override({color:  color}));
+    shapes.cube.draw(context, program_state, Mat4.translation(0, 0.33 * post_height, 0).times(link_transform), materials.fence_link.override({color: color}));
+    shapes.cube.draw(context, program_state, post_transform, materials.fence_post.override({color: post_color}));
 
     link_transform = Mat4.translation(2 * post_width, 0, 0).times(link_transform);
     post_transform = Mat4.translation(link_width, 0, 0).times(post_transform);

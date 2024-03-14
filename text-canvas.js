@@ -6,6 +6,7 @@ export class TextCanvas {
     document.fonts.add(font);
     this.font_ready = false;
     font.load().then(() => this.font_ready = true)
+    this.level = 0;
 
     const restart_button = document.createElement("button");
     const restart_button_wrapper = document.createElement("div");
@@ -36,27 +37,37 @@ export class TextCanvas {
     this.restart_button.textContent = "Restart"
     this.restart_button.style.marginTop = `${this.height - 60}px`;
     this.restart_button.hidden = true;
-    this.restart_button.onclick = death_callback;
+    this.restart_button.onclick = () => death_callback(this.level);
     this.restart_button.type = "button";
 
 
     restart_button_wrapper.append(pause_button);
+    this.pause_svg = "<svg  pointer-events=\"none\" \"http://www.w3.org/2000/svg\"  width=\"28\"  height=\"28\"  viewBox=\"0 0 24 24\"  fill=\"rgba(255,255,255,0.9)\"><path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\"/><path d=\"M9 4h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2z\" /><path d=\"M17 4h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2z\" /></svg>";
+    this.play_svg = "<svg  pointer-events=\"none\" xmlns=\"http://www.w3.org/2000/svg\"  width=\"28\"  height=\"28\"  viewBox=\"0 0 24 24\"  fill=\"rgba(255,255,255,0.9)\"><path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\"/><path d=\"M6 4v16a1 1 0 0 0 1.524 .852l13 -8a1 1 0 0 0 0 -1.704l-13 -8a1 1 0 0 0 -1.524 .852z\" /></svg>";
     this.pause_button = pause_button;
-    this.pause_button.textContent = "⏸️"
-    this.pause_button.style.marginTop = `5px`;
-    this.pause_button.style.marginLeft = `${this.width - 50}px`;
-    this.pause_button.style.background = "none";
+    this.pause_button.innerHTML = this.pause_svg;
+    this.pause_button.style.position = `absolute`;
+    this.pause_button.style.right = `10px`;
+    this.pause_button.style.top = `10px`;
+
+    this.pause_button.style.background = "rgba(255,255,255,0.31)";
+    this.pause_button.style.borderRadius = "10px";
+    this.pause_button.style.display = "flex";
+    this.pause_button.style.alignItems = "center";
+    this.pause_button.style.padding = "6px";
+    this.pause_button.style.cursor = "pointer";
+
+
+
+
     this.pause_button.style.border = "none";
-    this.pause_button.style.fontSize = "2em";
-    this.pause_button.style.right = "2em";
+
+
 
     this.pause_button.id = "pause";
 
     this.pause_button.hidden = false;
-    this.pause_button.onclick = () => {
-      paused_callback();
-      this.pause_button.textContent = (this.pause_button.textContent === "⏸️") ? "▶️" : "⏸️";
-    }
+    this.pause_button.onclick = paused_callback;
     this.pause_button.type = "button";
 
     this.score_ctx = score_canvas.getContext("2d");
@@ -86,11 +97,13 @@ export class TextCanvas {
     this.toast_drawn = false;
   }
 
-  handleCanvas(score, draw_toast, toast, dead, eggs, max_eggs, paused) {
+  handleCanvas(score, draw_toast, toast, dead, eggs, max_eggs, paused, level) {
+    this.pause_button.innerHTML = (paused) ? this.play_svg : this.pause_svg;
     if (!this.font_ready) return;
     // restarted after death
     if (this.death_drawn && !dead) {
       this.score = -1;
+      this.level = 0;
       this.toast_drawn = false;
       this.death_drawn = false;
       this.restart_button.hidden = true;
@@ -101,7 +114,12 @@ export class TextCanvas {
     if (!dead) {
       if (this.score < score) {
         this.score = score;
-        this.drawScore(this.score);
+        if (!this.level)
+          this.drawScore(this.score);
+      }
+      if (this.level !== level) {
+        this.level = level;
+        this.drawScore(`Level ${this.level}`);
       }
 
       if (this.eggs !== eggs) {
