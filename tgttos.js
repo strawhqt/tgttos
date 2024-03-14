@@ -12,26 +12,29 @@ export class Tgttos extends Scene {
   constructor() {
     super();
     this.text_canvas = new TextCanvas();
-    this.init();
+    this.init(0);
   }
 
-  init() {
+  init(level = 0) {
     this.x_bound = 30; // how far left and right player can move
     this.lane_depth = 4; // how wide each lane is (in terms of z)
     this.chicken = new Chicken(23, -this.lane_depth);
     this.camera_z_bound = -100;
     this.camera_speed = 0;
+    this.min_camera_speed = 4;
+    this.max_camera_speed = 12;
     this.chunks_rendered = 1;
     this.lane_transform = Mat4.identity().times(Mat4.scale(this.x_bound, 1, this.lane_depth))
       .times(Mat4.translation(0, -2, 0));
-    this.lane_colors = [hex_color('#ace065'), hex_color('#a0d15a')]
+    this.lane_colors = [hex_color('#ace065'), hex_color('#a0d15a')];
+    this.rest_lane_chance = 0.3;
 
     this.lanes = []
     this.lanes.push(new FirstLane(this.lane_transform, this.x_bound, this.lane_depth));
     // this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound, this.lane_depth, true)); // first lane
     this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     for (let i = 1; i < 16; i++) {
-      if (Math.random() < 0.3) {
+      if (Math.random() < this.rest_lane_chance) {
         this.lanes.at(-1).before_rest_lane = true;
         this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth));
       }
@@ -45,6 +48,7 @@ export class Tgttos extends Scene {
     this.text_canvas.score = -1;
 
     this.pause = false;
+    this.level = level;
   }
 
   make_control_panel() {
@@ -71,9 +75,19 @@ export class Tgttos extends Scene {
     this.key_triggered_button("revive", ["e"], () => {
       this.chicken.dead = false;
     });
-    this.key_triggered_button("restart", ["r"], this.init);
+    this.key_triggered_button("restart", ["r"], () => this.init(this.level));
     this.key_triggered_button("invincibility", ["i"], () => this.chicken.invincible = !this.chicken.invincible);
     this.key_triggered_button("pause", ["p"], () => this.pause = !this.pause);
+    this.key_triggered_button("toggle level/endless", ["l"], () => {
+      if (this.level === 0) {
+        this.init(1);
+        console.log("Level" + this.level);
+      }
+      else if (this.level > 0) {
+        this.init(0);
+        console.log("endless mode now")
+      }
+    })
   }
 
   display(context, program_state) {
@@ -98,7 +112,7 @@ export class Tgttos extends Scene {
     this.chicken.z_bound = Math.max(this.chicken.z_bound, z - this.lane_depth);
     this.camera_z_bound = Math.max(this.camera_z_bound + this.camera_speed * dt, z);
     if (z > 0)
-      this.camera_speed = Math.min(12, 4 + z / (this.lane_depth * 2 * 25));
+      this.camera_speed = Math.min(this.max_camera_speed, this.min_camera_speed + z / (this.lane_depth * 2 * 25));
     if (this.camera_z_bound - z > 10)
       this.chicken.dead = true;
 
@@ -122,6 +136,7 @@ export class Tgttos extends Scene {
 
 
     const draw_toast = x === 0 && z === 0 && !this.chicken.dead;
+    // const upper_left_text = this.level === 0 ? this.score : `Level: ${this.score}`;
     this.text_canvas.handleCanvas
       (this.score, draw_toast, "WASD to move!", this.chicken.dead, () => this.init(), this.chicken.active_egg_count, this.chicken.max_eggs);
 
@@ -148,20 +163,31 @@ export class Tgttos extends Scene {
       models.drawEgg(context, program_state, egg_model_transform);
     })
 
-    // generates new lanes and deletes old ones
-    if (z > (this.chunks_rendered - 1) * 10 * 2 * this.lane_depth + 2 * this.lane_depth) {
-      this.chunks_rendered++;
-      this.lanes = this.lanes.slice(-16);
-      for (let i = 0; i < 10; i++) {
-        if (Math.random() < 0.3) {
-          if (this.lanes.length > 1) this.lanes.at(-1).before_rest_lane = true;
-          this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth));
-        }
-        else {
-          this.lanes.push(new Road(this.lane_transform, this.x_bound, this.lane_depth));
-        }
-        this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
+    if (this.level > 0 && this.chunks_rendered > 9) {
+      if (this.lanes.length > 1) this.lanes.at(-1).before_rest_lane = true;
+      this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound, this.lane_depth, true));
+      this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
+      if (z > this.chunks_rendered * 10 * 2 * this.lane_depth + 6 * 2 * this.lane_depth) {
+        console.log("won");
+        this.init(this.level + 1);
       }
     }
+    else {
+      if (z > (this.chunks_rendered - 1) * 10 * 2 * this.lane_depth + 2 * this.lane_depth) {
+        this.chunks_rendered++;
+        this.lanes = this.lanes.slice(-16);
+        for (let i = 0; i < 10; i++) {
+          if (Math.random() < this.rest_lane_chance) {
+            if (this.lanes.length > 1) this.lanes.at(-1).before_rest_lane = true;
+            this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth));
+          }
+          else {
+            this.lanes.push(new Road(this.lane_transform, this.x_bound, this.lane_depth));
+          }
+          this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
+        }
+      }
+    }
+
   }
 }
