@@ -54,13 +54,16 @@ export class Lane {
 
 // for moving obstacles
 export class Road extends Lane {
-  constructor(model_transform, lane_x_width, lane_depth) {
+  constructor(model_transform, lane_x_width, lane_depth, max_obstacle_count = 0, max_speed, min_speed) {
     super(model_transform, hex_color("#525866"), lane_x_width, lane_depth);
+    this.max_obstacle_count = max_obstacle_count;
+    this.max_speed = max_speed;
+    this.min_speed = min_speed;
     this.obstacle_init();
   }
 
   obstacle_init() {
-    this.obstacle_count = Math.floor(Math.random() * 3);
+    this.obstacle_count = Math.floor(Math.random() * (this.max_obstacle_count + 1));
 
     for (let i = 0; i < this.obstacle_count; i++) {
       let overlap = false;
@@ -81,7 +84,7 @@ export class Road extends Lane {
             overlap = true;
         })
       } while (overlap)
-      this.obstacles.push(new Car(this.lane_transform, this.x_bound, start_offset, z_offset));
+      this.obstacles.push(new Car(this.lane_transform, this.x_bound, start_offset, z_offset, this.max_speed, this.min_speed));
     }
   }
 
@@ -126,15 +129,16 @@ export class Road extends Lane {
 
 // no moving obstacles
 export class RestLane extends Lane {
-  constructor(model_transform, color, lane_width, lane_depth, safe = false) {
+  constructor(model_transform, color, lane_width, lane_depth, safe = false, max_obstacle_count = 0) {
     super(model_transform, color, lane_width, lane_depth);
+    this.max_obstacle_count = max_obstacle_count;
     if (!safe)
       this.obstacle_init();
   }
 
   obstacle_init() {
 
-    this.obstacle_count = Math.floor(Math.random() * 6);
+    this.obstacle_count = Math.floor(Math.random() * (this.max_obstacle_count + 1));
     for (let i = 0; i < this.obstacle_count; i++) {
       let overlap = false;
       let start_offset = 0;

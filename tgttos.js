@@ -12,43 +12,55 @@ export class Tgttos extends Scene {
   constructor() {
     super();
     this.text_canvas = new TextCanvas(() => this.init(0), () => this.paused = !this.paused);
-    this.init(0);
+    this.init();
   }
 
-  init(level = 0) {
+  init(level = 0, min_camera_speed = 4, max_camera_speed = 12, camera_speed_delta = 25, max_obstacle_speed = 25, min_obstacle_speed = 10, max_moving_obstacle_count = 2, max_stationary_obstacle_count = 5, rest_lane_chance = 0.3) {
     this.x_bound = 30; // how far left and right player can move
     this.lane_depth = 4; // how wide each lane is (in terms of z)
-    this.chicken = new Chicken(23, -this.lane_depth);
+    this.chicken_min_speed = 40;
+    this.chicken = new Chicken(this.chicken_min_speed, 23, -this.lane_depth);
+
     this.camera_z_bound = -100;
     this.camera_speed = 0;
-    this.min_camera_speed = 4;
-    this.max_camera_speed = 12;
+    this.min_camera_speed = Math.min(this.chicken_min_speed * 0.8, min_camera_speed);
+    this.max_camera_speed = Math.min(this.chicken_min_speed * 0.9, max_camera_speed);
+    this.camera_speed_delta = Math.max(5, camera_speed_delta); // how many lanes per camera speed increase
+
+    this.max_obstacle_speed = Math.min(40, max_obstacle_speed);
+    this.min_obstacle_speed = Math.min(30, min_obstacle_speed);
+    this.max_moving_obstacle_count = Math.min(4, max_moving_obstacle_count);
+    this.max_stationary_obstacle_count = Math.min(7, max_stationary_obstacle_count);
+
+    this.rest_lane_chance = Math.max(0.1, rest_lane_chance);
+
     this.chunks_rendered = 1;
     this.lane_transform = Mat4.identity().times(Mat4.scale(this.x_bound, 1, this.lane_depth))
       .times(Mat4.translation(0, -2, 0));
     this.lane_colors = [hex_color('#ace065'), hex_color('#a0d15a')];
-    this.rest_lane_chance = 0.3;
+
 
     this.lanes = []
     this.lanes.push(new FirstLane(this.lane_transform, this.x_bound, this.lane_depth));
-    // this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound, this.lane_depth, true)); // first lane
     this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     for (let i = 1; i < 16; i++) {
       if (Math.random() < this.rest_lane_chance) {
         this.lanes.at(-1).before_rest_lane = true;
-        this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth));
+        this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth, false, this.max_stationary_obstacle_count));
       }
       else {
-        this.lanes.push(new Road(this.lane_transform, this.x_bound, this.lane_depth));
+        this.lanes.push(new Road(this.lane_transform, this.x_bound, this.lane_depth, this.max_moving_obstacle_count, this.max_obstacle_speed, this.min_obstacle_speed));
       }
       this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
     }
+
     this.highlight = false;
     this.score = 0;
     this.text_canvas.score = -1;
-
     this.paused = false;
+
     this.level = level;
+    this.printed_level_ending = false;
   }
 
   make_control_panel() {
@@ -75,7 +87,9 @@ export class Tgttos extends Scene {
     this.key_triggered_button("revive", ["e"], () => {
       this.chicken.dead = false;
     });
-    this.key_triggered_button("restart", ["r"], () => this.init(this.level));
+    this.key_triggered_button("restart", ["r"], () =>
+      this.init(this.level, this.min_camera_speed, this.max_camera_speed, this.camera_speed_delta, this.max_obstacle_speed, this.min_obstacle_speed,
+        this.max_moving_obstacle_count, this.max_stationary_obstacle_count, this.rest_lane_chance));
     this.key_triggered_button("invincibility", ["i"], () => this.chicken.invincible = !this.chicken.invincible);
     this.key_triggered_button("pause", ["p"], () => {
       this.paused = !this.paused;
@@ -85,7 +99,7 @@ export class Tgttos extends Scene {
     this.key_triggered_button("toggle level/endless", ["l"], () => {
       if (this.level === 0) {
         this.init(1);
-        console.log("Level" + this.level);
+        console.log("Level: " + this.level);
       }
       else if (this.level > 0) {
         this.init(0);
@@ -116,7 +130,7 @@ export class Tgttos extends Scene {
     this.chicken.z_bound = Math.max(this.chicken.z_bound, z - this.lane_depth);
     this.camera_z_bound = Math.max(this.camera_z_bound + this.camera_speed * dt, z);
     if (z > 0)
-      this.camera_speed = Math.min(this.max_camera_speed, this.min_camera_speed + z / (this.lane_depth * 2 * 25));
+      this.camera_speed = Math.min(this.max_camera_speed, this.min_camera_speed + z / (this.lane_depth * 2 * this.camera_speed_delta));
     if (this.camera_z_bound - z > 10)
       this.chicken.dead = true;
 
@@ -167,13 +181,29 @@ export class Tgttos extends Scene {
       models.drawEgg(context, program_state, egg_model_transform);
     })
 
-    if (this.level > 0 && this.chunks_rendered > 9) {
-      if (this.lanes.length > 1) this.lanes.at(-1).before_rest_lane = true;
-      this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound, this.lane_depth, true));
-      this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
-      if (z > this.chunks_rendered * 10 * 2 * this.lane_depth + 6 * 2 * this.lane_depth) {
-        console.log("won");
-        this.init(this.level + 1);
+    if (this.level > 0 && this.chunks_rendered > this.level + 3) { // every level is ten lanes longer
+      if (!this.printed_level_ending) {
+        if (this.lanes.length > 1) this.lanes.at(-1).before_rest_lane = true;
+        for (let i = 0; i < 16; i++ ) {
+          this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound, this.lane_depth, true));
+          this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
+        }
+        this.printed_level_ending = true;
+      }
+
+
+      if (z > this.chunks_rendered * 10 * 2 * this.lane_depth + 6 * 2 * this.lane_depth) { // if they beat the game
+        console.log(`Level: ${this.level + 1}`);
+        this.init(this.level + 1,
+          this.min_camera_speed * 1.25,
+          this.max_camera_speed * 1.25,
+          this.camera_speed_delta * 0.8,
+          this.max_obstacle_speed * 1.2,
+          this.min_obstacle_speed * 1.2,
+          this.max_moving_obstacle_count * 1.1,
+          this.max_stationary_obstacle_count * 1.1,
+          this.rest_lane_chance * 0.75,
+        );
       }
     }
     else {
@@ -183,10 +213,10 @@ export class Tgttos extends Scene {
         for (let i = 0; i < 10; i++) {
           if (Math.random() < this.rest_lane_chance) {
             if (this.lanes.length > 1) this.lanes.at(-1).before_rest_lane = true;
-            this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth));
+            this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[i % 2], this.x_bound, this.lane_depth, false, this.max_stationary_obstacle_count));
           }
           else {
-            this.lanes.push(new Road(this.lane_transform, this.x_bound, this.lane_depth));
+            this.lanes.push(new Road(this.lane_transform, this.x_bound, this.lane_depth, this.max_moving_obstacle_count, this.max_obstacle_speed, this.min_obstacle_speed));
           }
           this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
         }

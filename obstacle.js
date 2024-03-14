@@ -36,9 +36,9 @@ export class Obstacle {
 }
 
 export class MovingObstacle extends Obstacle {
-  constructor(model_transform, x_bound, x_radius, z_radius, start_offset, z_offset = 0) {
+  constructor(model_transform, x_bound, x_radius, z_radius, start_offset, z_offset = 0, max_speed, min_speed) {
     super(model_transform, x_bound, x_radius, z_radius, start_offset, z_offset);
-    this.speed = Math.random() * (25 - 10) + 10; // max speed = 30, min speed = 10
+    this.speed = Math.random() * (max_speed - min_speed) + min_speed;
     this.direction = Math.round(Math.random()) ? 1 : -1;
   }
 
@@ -96,8 +96,8 @@ export class MovingObstacle extends Obstacle {
 }
 
 export class Car extends MovingObstacle {
-  constructor(model_transform, x_bound, start_offset, z_offset = 0) {
-    super(model_transform, x_bound, 3, 2.5, start_offset, z_offset);
+  constructor(model_transform, x_bound, start_offset, z_offset = 0, max_speed, min_speed) {
+    super(model_transform, x_bound, 3, 2.5, start_offset, z_offset, max_speed, min_speed);
     this.color_palettes = {
       0: [hex_color("#fd6e30"), hex_color("#ff4c2b")],
       1: [hex_color("#8077a2"), hex_color("#6b5c95")],

@@ -6,12 +6,12 @@ const {
 } = tiny;
 
 export class Chicken {
-  constructor(x_bound, z_bound) {
+  constructor(min_speed, x_bound, z_bound) {
     this.moving_left = false;
     this.moving_right = false;
     this.moving_forward = false;
     this.moving_back = false;
-    this.min_speed = 40;
+    this.min_speed = min_speed;
     this.speed = this.min_speed;
     this.x_bound = x_bound; // how far left and right player can move
     this.z_bound = z_bound;
