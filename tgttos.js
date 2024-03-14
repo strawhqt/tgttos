@@ -16,8 +16,8 @@ export class Tgttos extends Scene {
   }
 
   init(level = 0) {
-    const min_camera_speed = 4 * Math.pow(1.25, level);
-    const max_camera_speed = 12 * Math.pow(1.25, level);
+    const min_camera_speed = 4 * Math.pow(1.2, level);
+    const max_camera_speed = 12 * Math.pow(1.2, level);
     const camera_speed_delta = 25 * Math.pow(0.9, level);
     const max_obstacle_speed = 25 * Math.pow(1.2, level);
     const min_obstacle_speed = 10 * Math.pow(1.2, level);
@@ -202,13 +202,13 @@ export class Tgttos extends Scene {
         this.printed_level_ending = true;
       }
       // if they beat the level
-      if (z > this.chunks_rendered * 10 * 2 * this.lane_depth + 7 * 2 * this.lane_depth) { // if they beat the game
-        setTimeout(() => {
-          if(!this.printed_next_level) {
+      if (z > this.chunks_rendered * 10 * 2 * this.lane_depth + 7 * 2 * this.lane_depth - this.lane_depth) { // if they beat the game
+        if (!this.printed_next_level) {
+          setTimeout(() => {
             this.init(this.level + 1);
-            this.printed_next_level = true;
-          }
-        }, 750)
+          }, 750)
+          this.printed_next_level = true;
+        }
       }
     }
     else {
