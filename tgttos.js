@@ -92,16 +92,16 @@ export class Tgttos extends Scene {
         }, 300)
     }
     }, '#6E6460');
-    this.key_triggered_button("highlight checked lanes", ["h"], () => this.highlight = !this.highlight, '#6E6460');
-    this.key_triggered_button("revive", ["e"], () => {
+    this.key_triggered_button("Highlight checked lanes", ["h"], () => this.highlight = !this.highlight, '#6E6460');
+    this.key_triggered_button("Revive", ["e"], () => {
       this.chicken.dead = false;
     });
-    this.key_triggered_button("restart", ["r"], () =>
+    this.key_triggered_button("Restart", ["r"], () =>
       this.init(this.level, this.min_camera_speed, this.max_camera_speed, this.camera_speed_delta, this.max_obstacle_speed, this.min_obstacle_speed,
         this.max_moving_obstacle_count, this.max_stationary_obstacle_count, this.rest_lane_chance));
-    this.key_triggered_button("invincibility", ["i"], () => this.chicken.invincible = !this.chicken.invincible);
-    this.key_triggered_button("pause", ["p"], () => this.paused = !this.paused);
-    this.key_triggered_button("toggle level/endless", ["l"], () => {
+    this.key_triggered_button("Invincibility", ["i"], () => this.chicken.invincible = !this.chicken.invincible);
+    this.key_triggered_button("Pause", ["p"], () => this.paused = !this.paused);
+    this.key_triggered_button("Toggle level/endless", ["l"], () => {
       if (this.level === 0) {
         this.init(1);
         console.log("Level: " + this.level);
@@ -162,8 +162,9 @@ export class Tgttos extends Scene {
 
 
     const draw_toast = x === 0 && z === 0 && !this.chicken.dead;
+    const toast = (this.level) ? "Get to the other side!" : "WASD to move!";
     this.text_canvas.handleCanvas
-      (this.score, draw_toast, "WASD to move!", this.chicken.dead, this.chicken.active_egg_count,
+      (this.score, draw_toast, toast, this.chicken.dead, this.chicken.active_egg_count,
         this.chicken.max_eggs, this.paused, this.level);
 
 

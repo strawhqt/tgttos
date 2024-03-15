@@ -1,7 +1,7 @@
 export class TextCanvas {
   constructor(death_callback, paused_callback) {
-    this.width = 1080;
-    this.height = 600;
+    this.width = 1080 * 2;
+    this.height = 600 * 2;
     const font = new FontFace("Lilita One", "url('./assets/LilitaOne-Regular.ttf')")
     document.fonts.add(font);
     this.font_ready = false;
@@ -83,6 +83,7 @@ export class TextCanvas {
       c.width = this.width;
     });
 
+
     [this.score_ctx, this.death_ctx, this.egg_ctx, this.toast_ctx].forEach((ctx) =>  {
       ctx.strokeStyle = 'black';
     });
@@ -117,7 +118,7 @@ export class TextCanvas {
       if (this.level !== level) {
         this.level = level;
         if (level)
-          this.drawScore(`Level ${this.level}`);
+          this.drawLevel(`Level ${this.level}`);
       }
 
       if (this.eggs !== eggs) {
@@ -142,12 +143,14 @@ export class TextCanvas {
     }
   }
 
-  brawlShadow(ctx, text, x, y, font_size = 4.4, offset = 3, outline = offset) {
+  brawlShadow(ctx, text, x, y, font_size = 8.8, offset = 6, outline = offset) {
     ctx.font = font_size.toString() + "em Lilita One, sans-serif";
     ctx.lineWidth = outline;
-    ctx.fillStyle = "black";
-    ctx.fillText(text, x, y + offset);
-    ctx.strokeText(text, x, y + offset);
+    if (outline) {
+      ctx.fillStyle = "black";
+      ctx.fillText(text, x, y + offset);
+      ctx.strokeText(text, x, y + offset);
+    }
     ctx.fillStyle = "white";
     ctx.fillText(text, x, y);
     ctx.strokeText(text, x, y);
@@ -158,32 +161,61 @@ export class TextCanvas {
   }
 
   drawScore(score) {
-    const x = 20;
-    const y = 70;
+    const x = 40;
+    let y = 140;
+    let pb = localStorage.getItem("bestScore");
+    if (!pb || pb < score) {
+      localStorage.setItem("bestScore", score.toString());
+    }
     this.score_ctx.textAlign = "left";
     this.clearCanvas(this.score_ctx);
     this.brawlShadow(this.score_ctx, score, x, y)
   }
 
+  drawLevel(level) {
+    const x = 40;
+    const y = 110;
+    this.score_ctx.textAlign = "left";
+    this.clearCanvas(this.score_ctx);
+    this.brawlShadow(this.score_ctx, level, x, y, 6, 4)
+  }
+
   drawToast(toast, t) {
-    const y_offset = 4 * Math.sin(16 * t);
+    const y_offset = 8 * Math.sin(16 * t);
     const x = this.width / 2;
-    const y = 60 + y_offset;
+    const y = 120 + y_offset;
     this.toast_ctx.textAlign = "center";
     this.clearCanvas(this.toast_ctx);
-    this.brawlShadow(this.toast_ctx, toast, x, y, 3, 2, 2)
+    this.brawlShadow(this.toast_ctx, toast, x, y, 6, 4)
     this.toast_drawn = true;
   }
 
   drawDeath(score) {
-    const x = this.width / 2;
+    let x = this.width / 2;
     let y = this.height / 2;
     this.death_ctx.textAlign = "center";
     this.death_ctx.fillStyle = "rgba(255,94,94,0.28)";
-    this.death_ctx.fillRect(0, 0, this.width, this.height);
-    this.brawlShadow(this.death_ctx, "You died!", x, y)
-    y += 60;
-    this.brawlShadow(this.death_ctx, score, x, y, 3, 2);
+    this.death_ctx.fillRect(0, 0, this.death_ctx.canvas.width, this.death_ctx.canvas.height);
+    this.brawlShadow(this.death_ctx, "You died!", x, y, 8, 6)
+    y += 140;
+    const pb = localStorage.getItem("bestScore");
+    const offset = Math.max(40 + pb.length * 25, 100);
+    x -= offset;
+    if (!this.level) {
+      this.brawlShadow(this.death_ctx, score, x, y, 6, 4);
+      this.brawlShadow(this.death_ctx, "score", x, y+60, 4, 3);
+      x += 2 * offset;
+      this.brawlShadow(this.death_ctx, pb, x, y, 6, 4);
+      this.brawlShadow(this.death_ctx, "best", x, y+60, 4, 3);
+    }
+    else {
+      this.brawlShadow(this.death_ctx, this.level, x, y, 6, 4);
+      this.brawlShadow(this.death_ctx, "Level", x, y+60, 4, 3);
+      x += 2 * offset;
+      this.brawlShadow(this.death_ctx, this.score, x, y, 6, 4);
+      this.brawlShadow(this.death_ctx, "Score", x, y+60, 4, 3);
+    }
+
     this.restart_button.style.visibility = "visible";
     this.pause_button.style.visibility = "hidden";
   }
