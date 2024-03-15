@@ -19,14 +19,14 @@ export class Tgttos extends Scene {
   }
 
   init(level = 0) {
-    const min_camera_speed = 4 * Math.pow(1.2, level);
+    const min_camera_speed = 4 * Math.pow(1.1, level);
     const max_camera_speed = 12 * Math.pow(1.2, level);
     const camera_speed_delta = 25 * Math.pow(0.9, level);
-    const max_obstacle_speed = 25 * Math.pow(1.2, level);
-    const min_obstacle_speed = 10 * Math.pow(1.2, level);
-    const max_moving_obstacle_count = 2 * Math.pow(1.1, level);
-    const max_stationary_obstacle_count = 5 * Math.pow(1.1, level);
-    const rest_lane_chance = 0.3 * Math.pow(0.8, level);
+    const max_obstacle_speed = 25 * Math.pow(1.1, level);
+    const min_obstacle_speed = 10 * Math.pow(1.05, level);
+    const max_moving_obstacle_count = 2 * Math.pow(1.1, level / 2);
+    const max_stationary_obstacle_count = 5 * Math.pow(1.1, level / 2);
+    const rest_lane_chance = 0.3 * Math.pow(0.9, level);
 
     this.x_bound = 30; // how far left and right player can move
     this.lane_depth = 4; // how wide each lane is (in terms of z)
@@ -135,7 +135,7 @@ export class Tgttos extends Scene {
     // position of the chicken
     const x = this.chicken.transform[0][3]; // +x on the right
     const z = -this.chicken.transform[2][3]; // +z into the page
-    this.chicken.z_bound = Math.max(this.chicken.z_bound, z - this.lane_depth);
+    this.chicken.min_z_bound = Math.max(this.chicken.min_z_bound, z - this.lane_depth);
     this.camera_z_bound = Math.max(this.camera_z_bound + this.camera_speed * dt, z);
 
     if (z > 0)
@@ -170,10 +170,6 @@ export class Tgttos extends Scene {
       (this.score, draw_toast, toast, this.chicken.dead, this.chicken.active_egg_count,
         this.chicken.max_eggs, this.paused, this.level);
 
-
-    // models.drawScore(context, program_state, this.chicken.z_bound, this.score.toString())
-
-
     // handle and draw lanes and obstacles
     const current_chicken_lane_index =
       Math.ceil(this.chunks_rendered === 1 ? 1 : (z - this.lanes[0].lane_z) / (2 * this.lane_depth));
@@ -201,11 +197,12 @@ export class Tgttos extends Scene {
         if (this.lanes.length > 1) this.lanes.at(-1).before_rest_lane = true;
         for (let i = 0; i < 5; i++ ) {
           if (i === 1)
-            this.lanes.push(new FinishLane(this.lane_transform, this.x_bound, this.lane_depth))
+            this.lanes.push(new FinishLane(this.lane_transform, this.x_bound, this.lane_depth));
           else
             this.lanes.push(new RestLane(this.lane_transform, this.lane_colors[0], this.x_bound, this.lane_depth, true));
           this.lane_transform = this.lane_transform.times(Mat4.translation(0, 0, -2));
         }
+        this.chicken.max_z_bound = -this.lane_transform[2][3] - 2 * this.lane_depth;
         this.printed_level_ending = true;
       }
       // if they beat the level

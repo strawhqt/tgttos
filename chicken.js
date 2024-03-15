@@ -6,7 +6,7 @@ const {
 } = tiny;
 
 export class Chicken {
-  constructor(min_speed, x_bound, z_bound) {
+  constructor(min_speed, x_bound, min_z_bound, max_z_bound = -1) {
     this.moving_left = false;
     this.moving_right = false;
     this.moving_forward = false;
@@ -14,7 +14,8 @@ export class Chicken {
     this.min_speed = min_speed;
     this.speed = this.min_speed;
     this.x_bound = x_bound; // how far left and right player can move
-    this.z_bound = z_bound;
+    this.min_z_bound = min_z_bound;
+    this.max_z_bound = max_z_bound;
     this.transform = Mat4.identity();
     this.angle = 0;
     this.start_move_time = 0;
@@ -72,8 +73,9 @@ export class Chicken {
       this.x_pos = min_x;
     if (this.x_pos > max_x)
       this.x_pos = max_x;
-    if (this.z_pos < this.z_bound)
-      this.z_pos = this.z_bound;
-
+    if (this.z_pos < this.min_z_bound)
+      this.z_pos = this.min_z_bound;
+    if (this.max_z_bound !== -1 && this.z_pos > this.max_z_bound)
+      this.z_pos = this.max_z_bound;
   }
 }
