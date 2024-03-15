@@ -95,7 +95,6 @@ export class Tgttos extends Scene {
         }, 300)
     }
     }, '#6E6460');
-    this.key_triggered_button("Highlight checked lanes", ["h"], () => this.highlight = !this.highlight, '#6E6460');
     this.key_triggered_button("Revive", ["e"], () => {
       this.chicken.dead = false;
     });
@@ -104,7 +103,7 @@ export class Tgttos extends Scene {
         this.max_moving_obstacle_count, this.max_stationary_obstacle_count, this.rest_lane_chance));
     this.key_triggered_button("Invincibility", ["i"], () => this.chicken.invincible = !this.chicken.invincible);
     this.key_triggered_button("Pause", ["p"], () => this.paused = !this.paused);
-    this.key_triggered_button("Toggle level/endless", ["l"], () => {
+    this.key_triggered_button("Toggle mode", ["t"], () => {
       if (this.level === 0) {
         this.init(1);
         console.log("Level: " + this.level);
@@ -114,6 +113,7 @@ export class Tgttos extends Scene {
         console.log("endless mode now")
       }
     })
+    this.key_triggered_button("Highlight checked lanes", ["h"], () => this.highlight = !this.highlight, '#6E6460');
   }
 
   display(context, program_state) {
@@ -176,11 +176,14 @@ export class Tgttos extends Scene {
 
     // handle and draw lanes and obstacles
     const current_chicken_lane_index =
-      Math.ceil(this.chunks_rendered === 1 ? 1 : (z - this.lanes[0].lane_z) / (2 * this.lane_depth))
+      Math.ceil(this.chunks_rendered === 1 ? 1 : (z - this.lanes[0].lane_z) / (2 * this.lane_depth));
     this.lanes.forEach((lane, i) => {
       const check_chicken = (i === current_chicken_lane_index || i === current_chicken_lane_index - 1);
       const highlight_lane = this.highlight && check_chicken;
-      if (!this.paused)
+      const min_i = current_chicken_lane_index - 3;
+      const max_i = current_chicken_lane_index + 14;
+      // cut down number of lane checks from 26 to 16
+      if (!this.paused && i > min_i && i < max_i)
         lane.handle_obstacles(dt);
       if (check_chicken) lane.check_chicken_collision(this.chicken);
       lane.draw(context, program_state, highlight_lane);

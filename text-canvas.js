@@ -1,3 +1,6 @@
+// handles all UI elements
+// text is rendered on multiple canvases
+// buttons are separate html elements, positioned relative to the canvas
 export class TextCanvas {
   constructor(death_callback, paused_callback, toggle_callback) {
     this.width = 1080 * 2;
@@ -42,7 +45,7 @@ export class TextCanvas {
     this.toggle_button = toggle_button;
     this.toggle_button.type = "button";
     this.toggle_button.onclick = toggle_callback;
-    this.toggle_button.textContent = "Toggle mode (l)";
+    this.toggle_button.textContent = "Toggle mode (t)";
 
     [this.restart_button, this.toggle_button].forEach((butt) => {
       butt.style.margin = "10px";
@@ -75,6 +78,7 @@ export class TextCanvas {
     this.pause_button.style.cursor = "pointer";
     this.pause_button.style.border = "none";
     this.pause_button.style.visibility = "visible";
+    this.pause_button.title = "Pause (p)";
 
     this.pause_button.onclick = paused_callback;
     this.pause_button.type = "button";
@@ -212,23 +216,21 @@ export class TextCanvas {
     this.brawlShadow(this.death_ctx, "You died!", x, y, 8, 6)
     y += 140;
     const pb = localStorage.getItem("bestScore");
-    const offset = Math.max(40 + pb.length * 25, 100);
-    x -= offset;
     if (!this.level) {
-      this.brawlShadow(this.death_ctx, score, x, y, 6, 4);
-      this.brawlShadow(this.death_ctx, "score", x, y+60, 4, 3);
-      x += 2 * offset;
-      this.brawlShadow(this.death_ctx, pb, x, y, 6, 4);
-      this.brawlShadow(this.death_ctx, "best", x, y+60, 4, 3);
+      const offset = Math.max(40 + pb.length * 25, 100);
+      this.brawlShadow(this.death_ctx, score, x - offset, y, 6, 4);
+      this.brawlShadow(this.death_ctx, "score", x - offset, y+60, 4, 3);
+      this.brawlShadow(this.death_ctx, pb, x + offset, y, 6, 4);
+      this.brawlShadow(this.death_ctx, "best", x + offset, y+60, 4, 3);
     }
     else {
+      const offset = 125;
       const ending = 46 + 10 * this.level;
       const percentage = Math.floor(this.score / ending * 100);
-      this.brawlShadow(this.death_ctx, this.level, x, y, 6, 4);
-      this.brawlShadow(this.death_ctx, "level", x, y+60, 4, 3);
-      x += 2 * offset;
-      this.brawlShadow(this.death_ctx, `${percentage}%`, x, y, 6, 4);
-      this.brawlShadow(this.death_ctx, "progress", x, y+60, 4, 3);
+      this.brawlShadow(this.death_ctx, this.level, x - offset, y, 6, 4);
+      this.brawlShadow(this.death_ctx, "level", x - offset, y+60, 4, 3);
+      this.brawlShadow(this.death_ctx, `${percentage}%`, x + offset, y, 6, 4);
+      this.brawlShadow(this.death_ctx, "progress", x + offset, y+60, 4, 3);
     }
 
     this.restart_button.style.visibility = "visible";
