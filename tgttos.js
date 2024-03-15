@@ -11,7 +11,10 @@ const {
 export class Tgttos extends Scene {
   constructor() {
     super();
-    this.text_canvas = new TextCanvas((level = 0) => this.init(level), () => this.paused = !this.paused);
+    this.text_canvas = new TextCanvas(
+      (level = 0) => this.init(level),
+      () => this.paused = !this.paused,
+      () => this.init((this.level) ? 0 : 1));
     this.init();
   }
 

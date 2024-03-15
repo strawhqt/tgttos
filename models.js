@@ -49,7 +49,7 @@ const materials = {
   finish_line: new Material(new defs.Textured_Phong(), {
     color: color(0, 0, 0, 1),
     ambient: 1, diffusivity: 1, specularity: 0,
-    texture: new Texture("assets/checker.png"),
+    texture: new Texture("assets/checker.png", "LINEAR_MIPMAP_LINEAR"),
   })
 }
 

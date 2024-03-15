@@ -1,5 +1,5 @@
 export class TextCanvas {
-  constructor(death_callback, paused_callback) {
+  constructor(death_callback, paused_callback, toggle_callback) {
     this.width = 1080 * 2;
     this.height = 600 * 2;
     const font = new FontFace("Lilita One", "url('./assets/LilitaOne-Regular.ttf')")
@@ -11,6 +11,7 @@ export class TextCanvas {
     const restart_button = document.createElement("button");
     const restart_button_wrapper = document.createElement("div");
     const pause_button = document.createElement("button");
+    const toggle_button = document.createElement("button");
     const score_canvas = document.createElement("canvas");
     const death_canvas = document.createElement("canvas");
     const egg_canvas = document.createElement("canvas");
@@ -26,25 +27,36 @@ export class TextCanvas {
     element.append(egg_canvas);
     element.append(toast_canvas);
     element.append(restart_button_wrapper);
+
     restart_button_wrapper.append(restart_button);
     restart_button_wrapper.style.position = "absolute";
     restart_button_wrapper.style.textAlign = "center";
-    restart_button_wrapper.style.width = `${this.width}px`;
-    restart_button_wrapper.style.height = `${this.height}px`;
+    restart_button_wrapper.style.width = `${this.width / 2}px`;
+    restart_button_wrapper.style.height = `${this.height / 2}px`;
     this.restart_button = restart_button;
     this.restart_button.textContent = "Restart (r)";
-    this.restart_button.style.marginTop = `${this.height - 60}px`;
-    this.restart_button.style.visibility = "hidden";
     this.restart_button.onclick = () => death_callback(this.level);
     this.restart_button.type = "button";
-    this.restart_button.style.fontFamily = "Lilita One, sans-serif";
-    this.restart_button.style.background = "rgba(83,159,190,0.94)";
-    this.restart_button.style.borderRadius = "10px";
-    this.restart_button.style.padding = "6px 12px 6px 12px";
-    this.restart_button.style.fontSize = "1.2em";
-    this.restart_button.style.cursor = "pointer";
-    this.restart_button.style.color = "#FFFFFF";
-    this.restart_button.style.border = "none";
+
+    restart_button_wrapper.append(toggle_button);
+    this.toggle_button = toggle_button;
+    this.toggle_button.type = "button";
+    this.toggle_button.onclick = toggle_callback;
+    this.toggle_button.textContent = "Toggle mode (l)";
+
+    [this.restart_button, this.toggle_button].forEach((butt) => {
+      butt.style.margin = "10px";
+      butt.style.marginTop = `${this.height/2 - 60}px`;
+      butt.style.visibility = "hidden";
+      butt.style.fontFamily = "Lilita One, sans-serif";
+      butt.style.background = "rgba(83,159,190,0.94)";
+      butt.style.borderRadius = "10px";
+      butt.style.padding = "6px 12px 6px 12px";
+      butt.style.fontSize = "1.2em";
+      butt.style.cursor = "pointer";
+      butt.style.color = "#FFFFFF";
+      butt.style.border = "none";
+    })
 
 
     restart_button_wrapper.append(pause_button);
@@ -104,6 +116,7 @@ export class TextCanvas {
       this.toast_drawn = false;
       this.death_drawn = false;
       this.restart_button.style.visibility = "hidden";
+      this.toggle_button.style.visibility = "hidden";
       this.pause_button.style.visibility = "visible";
       this.clearCanvas(this.death_ctx);
     }
@@ -209,15 +222,19 @@ export class TextCanvas {
       this.brawlShadow(this.death_ctx, "best", x, y+60, 4, 3);
     }
     else {
+      const ending = 46 + 10 * this.level;
+      const percentage = Math.floor(this.score / ending * 100);
       this.brawlShadow(this.death_ctx, this.level, x, y, 6, 4);
-      this.brawlShadow(this.death_ctx, "Level", x, y+60, 4, 3);
+      this.brawlShadow(this.death_ctx, "level", x, y+60, 4, 3);
       x += 2 * offset;
-      this.brawlShadow(this.death_ctx, this.score, x, y, 6, 4);
-      this.brawlShadow(this.death_ctx, "Score", x, y+60, 4, 3);
+      this.brawlShadow(this.death_ctx, `${percentage}%`, x, y, 6, 4);
+      this.brawlShadow(this.death_ctx, "progress", x, y+60, 4, 3);
     }
 
     this.restart_button.style.visibility = "visible";
+    this.toggle_button.style.visibility = "visible";
     this.pause_button.style.visibility = "hidden";
+
   }
 
   drawEggs(eggs, max_eggs) {
